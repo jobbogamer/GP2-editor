@@ -31,3 +31,6 @@ GP2-editor.creator
 GP2-editor.files 
 GP2-editor.includes
 
+# Don't track the build directory, but DO include _release
+build
+!build/_release
