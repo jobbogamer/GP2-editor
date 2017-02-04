@@ -26,7 +26,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(GP2)
 
 # Note: Set the location of the various components manually here
-SET(GP2_COMPILER_LOCATION "~/Dropbox/University/Project/Modified Code/Compiler/Compiler")  # Change this 
+SET(GP2_COMPILER_LOCATION "~/Dropbox/University/Project/Modified_Code/Compiler/Compiler")  # Change this 
 
 SET(BOOST_INCLUDE_DIR /usr/local/opt/boost/include/boost/)  # Change this
 FIND_PACKAGE(Boost 1.49.0 REQUIRED)
