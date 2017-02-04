@@ -19,26 +19,26 @@
 #
 
 # Note: On office computer, set the prefix path before calling by
-# export CMAKE_PREFIX_PATH=/local/sda5/ish503/root:/local/sda5/ish503/root/qt4:/local/sda5/ish503/root/boost_1_55_0/:/local/sda5/ish503/root/OGDF-source/:/local/sda5/ish503/root/OGDF-source/include/
+# export CMAKE_PREFIX_PATH=/usr/local/Cellar/qt/4.8.7_3:/usr/local/Cellar/boost/1.63.0:~/Developer/OGDF/OGDF-source/:~/Developer/OGDF/OGDF-source/include/:~/Developer/OGDF/OGDF-build/include/
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(GP2)
 
 # Note: Set the location of the various components manually here
-SET(GP2_COMPILER_LOCATION "~/github/GP2/Compiler")  # Change this 
+SET(GP2_COMPILER_LOCATION "~/Dropbox/University/Project/Modified Code/Compiler/Compiler")  # Change this 
 
-SET(BOOST_INCLUDE_DIR /local/sda5/ish503/root)  # Change this
+SET(BOOST_INCLUDE_DIR /usr/local/opt/boost/include/boost/)  # Change this
 FIND_PACKAGE(Boost 1.49.0 REQUIRED)
 
-SET(OGDF_INCLUDE_DIR /local/sda5/ish503/root/OGDF-source) # Change this 
+SET(OGDF_INCLUDE_DIR ~/Developer/OGDF/OGDF-source) # Change this 
 
 # Find OGDF
 FIND_PATH(OGDF_INCLUDE_DIR ogdf/basic/basic.h)
 IF(WIN32)
     FIND_LIBRARY(OGDF_LIBRARY libOGDF)
 ELSE()
-    FIND_LIBRARY(OGDF_LIBRARY OGDF /local/sda5/ish503/root/OGDF-build/lib64) # Change this
+    FIND_LIBRARY(OGDF_LIBRARY OGDF ~/Developer/OGDF/OGDF-build/lib64) # Change this
 ENDIF()
 
 
