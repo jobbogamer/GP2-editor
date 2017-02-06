@@ -372,7 +372,7 @@ bool RunConfiguration::run(QString programFile, QString graphFile, QString outpu
     /* Location of GP Compiler */
     //QString GPCompilerDir = "~/github/GP2/Compiler";
     // QString GPCompilerDir = QString(COMPILER_LOCATION);
-    QString Compiler = "GP2-compile";
+    QString Compiler = "gp2compile";
     QStringList args = QStringList();
 
     //qDebug() << "Location of GP2 Compiler: " << Compiler;
@@ -580,7 +580,7 @@ bool RunConfiguration::run(QString programFile, QString graphFile, QString outpu
     QString RunCmd = QString();
     RunCmd += "cd /tmp/gp2";
     RunCmd += " && make && ";
-    RunCmd += "./GP2-run && cp gp2.output " + outputFile.replace(" ","\\ ");
+    RunCmd += "./gp2run && cp gp2.output " + outputFile.replace(" ","\\ ");
 
     qDebug () << "  Attempting to execute GP2 Program:" << RunCmd;
 //    bool success = (call(RunCmd) == 0);
