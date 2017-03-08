@@ -34,3 +34,4 @@ GP2-editor.includes
 # Don't track the build directory, but DO include _release
 build
 !build/_release
+*.sublime-workspace
