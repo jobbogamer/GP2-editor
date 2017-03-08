@@ -57,6 +57,8 @@ RunConfiguration::RunConfiguration(Project *proj, QWidget *parent, RunConfig* ru
         index = _ui->targetGraphCombo->findText(_config->graph());
         if (index != -1)
             _ui->targetGraphCombo->setCurrentIndex(index);
+
+        _ui->programTracingCheckbox->setChecked(_config->hasProgramTracing());
     }
 }
 
@@ -85,6 +87,11 @@ QString RunConfiguration::program() const
 QString RunConfiguration::graph() const
 {
     return _ui->targetGraphCombo->currentText();
+}
+
+bool RunConfiguration::isProgramTracingEnabled() const
+{
+    return _ui->programTracingCheckbox->isChecked();
 }
 
 
@@ -119,7 +126,13 @@ void RunConfiguration::setGraph(QString graphName)
         _config->setGraph(graphName);
 }
 
-
+void RunConfiguration::setProgramTracingEnabled(bool enabled)
+{
+    _ui->programTracingCheckbox->setChecked(enabled);
+    if (_config) {
+        _config->setProgramTracing(enabled);
+    }
+}
 
 
 void RunConfiguration::toggleDetails()

@@ -29,10 +29,12 @@ public:
     QString name() const;
     QString program() const;
     QString graph() const;
+    bool isProgramTracingEnabled() const;
 
     void setName(QString name);
     void setProgram(QString programName);
     void setGraph(QString graphName);
+    void setProgramTracingEnabled(bool enabled);
 
 public slots:
     void toggleDetails();

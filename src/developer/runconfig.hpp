@@ -29,9 +29,11 @@ public:
 
 		void setTracing(bool tracing);
 		void setBacktracking(bool backtracking);
+        void setProgramTracing(bool programTracing);
 
 		bool hasTracing();
 		bool hasBacktracking();
+        bool hasProgramTracing();
 
 
 signals:
@@ -43,7 +45,11 @@ private:
 		QString _graph;
 		QString _program;
 		bool _tracing;
-		bool _backtracking;    
+        bool _backtracking;
+
+        /** "Program tracing", meaning the option to trace the GP2 program at
+         * runtime into a .gptrace file to use in the Tracing tab of the editor. */
+        bool _programTracing;
 };
 
 }

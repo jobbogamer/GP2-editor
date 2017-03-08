@@ -66,6 +66,11 @@ void RunConfig::setBacktracking(bool backtracking)
 	_backtracking = backtracking;
 }
 
+void RunConfig::setProgramTracing(bool programTracing)
+{
+    _programTracing = programTracing;
+}
+
 bool RunConfig::hasTracing()
 {
 	return _tracing;
@@ -73,6 +78,11 @@ bool RunConfig::hasTracing()
 bool RunConfig::hasBacktracking()
 {
 	return _backtracking;
+}
+
+bool RunConfig::hasProgramTracing()
+{
+    return _programTracing;
 }
 
 }
