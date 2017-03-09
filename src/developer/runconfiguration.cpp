@@ -532,6 +532,7 @@ bool RunConfiguration::run(QString programFile, QString graphFile, QString outpu
     /* Create command for compiling program and host graph */
     /* *************************************************** */
     args.clear();
+    if (_config->hasProgramTracing()) { args << "-t"; }
     args << programFile.replace(" ","\\ ") << graphFile.replace(" ","\\ ");
 
     // Clear the output directory first;
