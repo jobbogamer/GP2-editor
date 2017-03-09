@@ -306,6 +306,17 @@ void RunConfiguration::runConfiguration()
     // Will not do a recursive save on all files
     _project->save();
 
+    // If tracing is turned on, take a copy of the program and graph files so
+    // that the user can edit the originals but still be able to step through
+    // the trace.
+    if (_config->hasProgramTracing()) {
+        QString programPath = prog->absolutePath().replace(".gp2", "_trace.gp2");
+        QFile::copy(prog->absolutePath(), programPath);
+
+        QString graphPath = graph->absolutePath().replace(".host", "_trace.host");
+        QFile::copy(graph->absolutePath(), graphPath);
+    }
+
     /* Desired location of output */
     // The actual output is put by default in /tmp/gp2/gp2.output
     QDir resultsDir = _project->resultsDir();
