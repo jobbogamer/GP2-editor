@@ -578,6 +578,8 @@ bool Project::readGraphs(QDomNode &node)
 
 bool Project::readRunConfigs(QDomNode &node)
 {
+    QVector<QString> legacyConfigs;
+
     QDomNodeList nodes = node.childNodes();
     for(int i = 0; i < nodes.count(); ++i)
     {
@@ -615,13 +617,29 @@ bool Project::readRunConfigs(QDomNode &node)
             return false;
         }
 
-
         RunConfig *config = new RunConfig(this, name, program, graph);
+
+        QString programTracing = elem.attribute("programTracing");
+        if (programTracing.isEmpty()) {
+            legacyConfigs.push_back(config->name());
+            config->setProgramTracing(false);
+        }
+        else {
+            config->setProgramTracing(programTracing == "1");
+        }
 
         readRunConfigOptions(n, config);
         _runConfigurations.push_back(config);
         // emit runConfigurationListChanged();
+    }
 
+    if (legacyConfigs.size() > 0) {
+        qDebug() << "Old project file does not contain a programTracing attribute for one or more run configurations.";
+        qDebug() << "Program tracing has been disabled by default for the following configurations:";
+        QString name;
+        foreach (name, legacyConfigs) {
+            qDebug() << name;
+        }
     }
 
     return true;
@@ -651,22 +669,22 @@ void Project::readRunConfigOptions(QDomNode &node, RunConfig* config)
 
 				    if(elem.tagName() == "tracing")
 				    {
-								bool trace = QVariant(elem.text()).toBool();
-								config->setTracing(trace);
+                        bool trace = QVariant(elem.text()).toBool();
+                        config->setTracing(trace);
 				        continue;
 				    }
 				    else if(elem.tagName() == "backtracking")
 				    {
-								bool backtrack = QVariant(elem.text()).toBool();
-								config->setBacktracking(backtrack);
+                        bool backtrack = QVariant(elem.text()).toBool();
+                        config->setBacktracking(backtrack);
 				        continue;
-				    }	
-						else 
-						{
+                    }
+                    else
+                    {
 				        qDebug() << "Ignoring unexpected tag: " << elem.tagName();
-				        qDebug() << "GP Developer was expecting a: <tracing> or <backtracking>";
+                        qDebug() << "GP Developer was expecting a: <tracing> or <backtracking>";
 								continue;
-						}			
+                    }
 				}		
 		}
 }
@@ -1287,6 +1305,7 @@ bool Project::save()
         configTag.setAttribute("name", config->name());
         configTag.setAttribute("program", config->program());
         configTag.setAttribute("graph", config->graph());
+        configTag.setAttribute("programTracing", config->hasProgramTracing());
 
         /*
         QDomElement configOptions = doc.createElement("options");

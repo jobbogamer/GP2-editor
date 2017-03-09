@@ -271,14 +271,16 @@ void RunConfiguration::runConfiguration()
     // _config = _project->runConfig(configName);
 
     if (!_config)
+    {
         _config = new RunConfig(_project, configName, prog->name(), graph->fileName());
-
+    }
     else
     {
         _config->setName(configName);
         _config->setProgram(prog->name());
         _config->setGraph(graph->fileName());
     }
+    _config->setProgramTracing(this->isProgramTracingEnabled());
 
     // Update the project
     // Check the current configuration is non-local (i.e. it exists in the project already)

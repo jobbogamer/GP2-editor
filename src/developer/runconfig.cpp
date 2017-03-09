@@ -12,6 +12,7 @@ RunConfig::RunConfig(QObject *parent, const QString& name, const QString& progra
 		, _graph(graph)
 		, _tracing(false)
 		, _backtracking(false)
+        , _programTracing(false)
 {
 }
 
