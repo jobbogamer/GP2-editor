@@ -484,7 +484,7 @@ bool RunConfiguration::run(QString programFile, QString graphFile, QString outpu
         QMessageBox::information(
                     this,
                     tr("Validation Failed"),
-                    tr("Could not validate the given configartion. See the log for details."));
+                    tr("Could not validate the given configuration. See the log for details."));
         validate.close();
         return false;
     }
@@ -562,7 +562,7 @@ bool RunConfiguration::run(QString programFile, QString graphFile, QString outpu
         QMessageBox::information(
                     this,
                     tr("Compilation Failed"),
-                    tr("Could not start compiling the given configartion."));
+                    tr("Could not start compiling the given configuration."));
         compile.close();
         return false;
     }
@@ -572,7 +572,7 @@ bool RunConfiguration::run(QString programFile, QString graphFile, QString outpu
         QMessageBox::information(
                     this,
                     tr("Compilation Failed"),
-                    tr("Could not finish compiling the given configartion."));
+                    tr("Could not finish compiling the given configuration."));
         compile.close();
         return false;
     }
@@ -584,7 +584,7 @@ bool RunConfiguration::run(QString programFile, QString graphFile, QString outpu
         QMessageBox::information(
                     this,
                     tr("Compilation Failed"),
-                    tr("Could not compile the given configartion. See the log for details."));
+                    tr("Could not compile the given configuration. See the log for details."));
         compile.close();
         return false;
     }
@@ -613,7 +613,7 @@ bool RunConfiguration::run(QString programFile, QString graphFile, QString outpu
         QMessageBox::information(
                     this,
                     tr("Run Failed"),
-                    tr("Could not start running the given configartion."));
+                    tr("Could not start running the given configuration."));
         run.close();
         qDebug () << "    Run failed.";
         return false;
@@ -624,7 +624,7 @@ bool RunConfiguration::run(QString programFile, QString graphFile, QString outpu
         QMessageBox::information(
                     this,
                     tr("Run Failed"),
-                    tr("Could not finish running the given configartion."));
+                    tr("Could not finish running the given configuration."));
         run.close();
         qDebug () << "    Run failed.";
         return false;
