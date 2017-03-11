@@ -264,58 +264,37 @@ void MainWindow::setProject(Project *project)
 
 void MainWindow::setProjectActive(bool state)
 {
-    if(state)
-    {
-        // Hide the quick run widget
-        _ui->quickRunWidget->setVisible(false);
+    // Hide the quick run widget
+    _ui->quickRunWidget->setVisible(false);
 
-        // Enable all tabs
-        _ui->tabWidget->setTabEnabled("default", 1, true);
-        _ui->tabWidget->setTabEnabled("default", 2, true);
-        _ui->tabWidget->setTabEnabled("default", 3, true);
-        _ui->tabWidget->setTabEnabled("default", 4, true);
+    // Enable or disable all tabs, since it makes no sense to go to the
+    // edit, run, results, or tracing tabs if no project is open.
+    _ui->tabWidget->setTabEnabled("default", 1, state);
+    _ui->tabWidget->setTabEnabled("default", 2, state);
+    _ui->tabWidget->setTabEnabled("default", 3, state);
+    _ui->tabWidget->setTabEnabled("default", 4, state);
 
-        // Enable elements of the drop-down menus
-        _ui->actionNewGraph->setEnabled(true);
-        _ui->actionNewProgram->setEnabled(true);
-        _ui->actionNewRule->setEnabled(true);
-        _ui->actionOpenProgram->setEnabled(true);
-        _ui->actionOpenRule->setEnabled(true);
-        _ui->actionOpenGraph->setEnabled(true);
-        _ui->actionCloseProject->setEnabled(true);
-        _ui->actionSaveAll->setEnabled(true);
-        _ui->actionSelectAll->setEnabled(true);
-        _ui->menuFindReplace->setEnabled(true);
+    // Enable or disable elements of the drop-down menus, again because
+    // using these makes no sense if no project is open.
+    _ui->actionNewGraph->setEnabled(state);
+    _ui->actionNewProgram->setEnabled(state);
+    _ui->actionNewRule->setEnabled(state);
+    _ui->actionOpenProgram->setEnabled(state);
+    _ui->actionOpenRule->setEnabled(state);
+    _ui->actionOpenGraph->setEnabled(state);
+    _ui->actionCloseProject->setEnabled(state);
+    _ui->actionSaveAll->setEnabled(state);
+    _ui->actionSelectAll->setEnabled(state);
+    _ui->menuFindReplace->setEnabled(state);
 
-        // Move us into the edit tab if we're in the welcome tab.
-        if(_ui->tabWidget->currentTab().second == 0)
+    // If a project is open, and the "welcome" tab is active, move to the
+    // "edit" tab. If no project is open, go back to the "welcome" tab.
+    if (state) {
+        if (_ui->tabWidget->currentTab().second == 0) {
             _ui->tabWidget->setCurrentIndex("default", 1);
+        }
     }
-    else
-    {
-        // Hide the quick run widget until a project is open
-        _ui->quickRunWidget->setVisible(false);
-
-        // All tabs apart from "Welcome" should only become active once a project is
-        // created or opened.
-        _ui->tabWidget->setTabEnabled("default", 1, false);
-        _ui->tabWidget->setTabEnabled("default", 2, false);
-        _ui->tabWidget->setTabEnabled("default", 3, false);
-        _ui->tabWidget->setTabEnabled("default", 4, false);
-
-        // Disable elements of the drop-down menus
-        _ui->actionNewGraph->setEnabled(false);
-        _ui->actionNewProgram->setEnabled(false);
-        _ui->actionNewRule->setEnabled(false);
-        _ui->actionOpenProgram->setEnabled(false);
-        _ui->actionOpenRule->setEnabled(false);
-        _ui->actionOpenGraph->setEnabled(false);
-        _ui->actionCloseProject->setEnabled(false);
-        _ui->actionSaveAll->setEnabled(false);
-        _ui->actionSelectAll->setEnabled(false);
-        _ui->menuFindReplace->setEnabled(false);
-
-        // If we're not in the welcome tab then move us there now
+    else {
         _ui->tabWidget->setCurrentIndex("default", 0);
     }
 }
