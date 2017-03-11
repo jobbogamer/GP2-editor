@@ -21,6 +21,7 @@ namespace Developer {
 class Edit;
 class Run;
 class Results;
+class Tracing;
 class GraphWidget;
 
 /*!
@@ -44,6 +45,7 @@ class GraphWidget;
  * |    Edit   |                                             | <- tab widget
  * |    Run    |  Text... more stuff, text about the app     |
  * |  Results  |  and more would follow, like this text.     |
+ * |  Tracing  |                                             |
  * +---------------------------------------------------------+
  * | Ready.                                                  | <- status bar
  * +---------------------------------------------------------+
@@ -295,6 +297,7 @@ private:
     Edit *_edit;
     Run *_run;
     Results *_results;
+    Tracing *_tracing;
 };
 
 }

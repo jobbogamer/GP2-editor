@@ -73,7 +73,8 @@ HEADERS += \
     list.hpp \
     firstrundialog.hpp \
     listvalidator.hpp \
-    runconfig.hpp
+    runconfig.hpp \
+    tracing.hpp
 
 FORMS += \
     welcome.ui \
@@ -105,7 +106,8 @@ FORMS += \
     importruledialog.ui \
     importgraphdialog.ui \
     openprojectprogressdialog.ui \
-    firstrundialog.ui
+    firstrundialog.ui \
+    tracing.ui
 
 RESOURCES += \
     icons.qrc \
@@ -173,7 +175,8 @@ SOURCES += \
     list.cpp \
     firstrundialog.cpp \
     listvalidator.cpp \
-    runconfig.cpp
+    runconfig.cpp \
+    tracing.cpp
 
 OTHER_FILES += \
     templates/newproject.gpp \

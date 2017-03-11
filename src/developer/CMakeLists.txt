@@ -71,6 +71,7 @@ SET(GPDeveloper_HPP_SRCS
     src/developer/runconfig.hpp
     src/developer/runconfiguration.hpp
     src/developer/styledbutton.hpp
+    src/developer/tracing.hpp
     src/developer/welcome.hpp
 )
 
@@ -105,6 +106,7 @@ SET(GPDeveloper_UI_SRCS
     src/developer/run.ui
     src/developer/runconfiguration.ui
     src/developer/styledbutton.ui
+    src/developer/tracing.ui
     src/developer/welcome.ui
 )
 

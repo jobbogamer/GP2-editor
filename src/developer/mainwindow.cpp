@@ -12,6 +12,7 @@
 #include "edit.hpp"
 #include "run.hpp"
 #include "results.hpp"
+#include "tracing.hpp"
 #include "graphview/graphwidget.hpp"
 #include "graphview/graphscene.hpp"
 
@@ -90,6 +91,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect( _run , SIGNAL(obtainedResultGraph(QString, RunConfig*)), _results , SLOT(addResultGraph(QString, RunConfig*))  );
 
+    _tracing = new Tracing(this);
+    _ui->tabWidget->addTab(_tracing,
+                           QIcon(QPixmap(":/icons/tracing.png")),
+                           tr("Tracing")
+                          );
 
     // No open project by default, so set that state
     setProjectActive(false);
@@ -267,6 +273,7 @@ void MainWindow::setProjectActive(bool state)
         _ui->tabWidget->setTabEnabled("default", 1, true);
         _ui->tabWidget->setTabEnabled("default", 2, true);
         _ui->tabWidget->setTabEnabled("default", 3, true);
+        _ui->tabWidget->setTabEnabled("default", 4, true);
 
         // Enable elements of the drop-down menus
         _ui->actionNewGraph->setEnabled(true);
@@ -294,6 +301,7 @@ void MainWindow::setProjectActive(bool state)
         _ui->tabWidget->setTabEnabled("default", 1, false);
         _ui->tabWidget->setTabEnabled("default", 2, false);
         _ui->tabWidget->setTabEnabled("default", 3, false);
+        _ui->tabWidget->setTabEnabled("default", 4, false);
 
         // Disable elements of the drop-down menus
         _ui->actionNewGraph->setEnabled(false);
