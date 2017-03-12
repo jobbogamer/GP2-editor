@@ -64,6 +64,13 @@
         <file alias="control_next.png">images/FatCow/32x32/control_fastforward_blue.png</file>
         <file alias="control_previous.png">images/FatCow/32x32/control_rewind_blue.png</file>
         <file alias="control_start.png">images/FatCow/32x32/control_start_blue.png</file>
+        <file alias="find_match.png">images/FatCow/32x32/magnifier.png</file>
+        <file alias="apply_match.png">images/magnifier_apply.png</file>
+        <file alias="unapply_match.png">images/magnifier_cancel.png</file>
+        <file alias="step_forward.png">images/FatCow/32x32/resultset_next.png</file>
+        <file alias="step_backward.png">images/FatCow/32x32/resultset_previous.png</file>
+        <file alias="skip_forward.png">images/FatCow/32x32/resultset_last.png</file>
+        <file alias="skip_backward.png">images/FatCow/32x32/resultset_first.png</file>
         <file alias="tracing.png">images/FatCow/32x32/control_play_blue.png</file>
     </qresource>
 </RCC>
