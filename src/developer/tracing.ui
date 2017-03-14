@@ -43,6 +43,9 @@
       </item>
       <item>
        <widget class="QToolButton" name="toolButton">
+        <property name="toolTip">
+         <string>Jump back to the start of execution (the input graph).</string>
+        </property>
         <property name="text">
          <string>Go to Start</string>
         </property>
@@ -57,6 +60,9 @@
       </item>
       <item>
        <widget class="QToolButton" name="toolButton_2">
+        <property name="toolTip">
+         <string>Go back one step.</string>
+        </property>
         <property name="text">
          <string>Step Backward</string>
         </property>
@@ -71,6 +77,9 @@
       </item>
       <item>
        <widget class="QToolButton" name="toolButton_3">
+        <property name="toolTip">
+         <string>Highlight the match for the next rule, if there are any.</string>
+        </property>
         <property name="text">
          <string>Find Match</string>
         </property>
@@ -85,6 +94,9 @@
       </item>
       <item>
        <widget class="QToolButton" name="toolButton_4">
+        <property name="toolTip">
+         <string>Go forward one step.</string>
+        </property>
         <property name="text">
          <string>Step Forward</string>
         </property>
@@ -99,6 +111,9 @@
       </item>
       <item>
        <widget class="QToolButton" name="toolButton_5">
+        <property name="toolTip">
+         <string>Jump to the end of execution (the output graph).</string>
+        </property>
         <property name="text">
          <string>Go to End</string>
         </property>
