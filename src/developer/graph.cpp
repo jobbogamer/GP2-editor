@@ -3,7 +3,7 @@
  */
 #include "graph.hpp"
 #include "graphparser.hpp"
-#include "translate.hpp"
+#include "translate/translate.hpp"
 
 #include <QSettings>
 #include <QDomDocument>

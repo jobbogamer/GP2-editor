@@ -9,7 +9,12 @@ QT += core gui xml widgets svg
 TARGET = GPDeveloper
 TEMPLATE = app
 
-INCLUDEPATH += src/developer
+INCLUDEPATH += src/developer \
+    /usr/local/Cellar/qt/4.8.7_3 \
+    /usr/local/Cellar/boost/1.63.0/include \
+    /Users/Josh/Developer/OGDF/OGDF-source/ \
+    /Users/Josh/Developer/OGDF/OGDF-source/include/ \
+    /Users/Josh/Developer/OGDF/OGDF-build/include/
 
 HEADERS += \
     welcome.hpp \
@@ -70,11 +75,12 @@ HEADERS += \
     importruledialog.hpp \
     importgraphdialog.hpp \
     openprojectprogressdialog.hpp \
-    list.hpp \
     firstrundialog.hpp \
     listvalidator.hpp \
     runconfig.hpp \
-    tracing.hpp
+    tracing.hpp \
+    translate/*.hpp \
+    translate/*.h
 
 FORMS += \
     welcome.ui \
@@ -148,7 +154,6 @@ SOURCES += \
     preferences/preferencesdialog.cpp \
     quickrunwidget.cpp \
     ruleparser.cpp \
-    parsertypes.cpp \
     graphparser.cpp \
     ruleedit.cpp \
     programedit.cpp \
@@ -172,11 +177,12 @@ SOURCES += \
     importruledialog.cpp \
     importgraphdialog.cpp \
     openprojectprogressdialog.cpp \
-    list.cpp \
     firstrundialog.cpp \
     listvalidator.cpp \
     runconfig.cpp \
-    tracing.cpp
+    tracing.cpp \
+    translate/*.cpp \
+    translate/*.c
 
 OTHER_FILES += \
     templates/newproject.gpp \
@@ -200,7 +206,7 @@ OTHER_FILES += \
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../libgp/release/ -llibgp -L"C:\Program Files (x86)\OGDF\lib" -llibOGDF -lpsapi
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../libgp/debug/ -llibgp -L"C:\Program Files (x86)\OGDF\lib" -llibOGDF -lpsapi
-else:unix: LIBS += -L$$OUT_PWD/../libgp/ -llibgp -lOGDF
+else:unix: LIBS += -L$$OUT_PWD/../libgp/ -llibgp -L/Users/Josh/Developer/OGDF/OGDF-build/lib64/ -lOGDF
 
 win32: INCLUDEPATH += "C:\Program Files (x86)\OGDF\include"
 win32: INCLUDEPATH += "C:\Users\Alex\Downloads\boost_1_53_0"
