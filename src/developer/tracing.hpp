@@ -17,6 +17,15 @@ public:
     explicit Tracing(QWidget *parent = 0);
     ~Tracing();
 
+public slots:
+    void goToStart();
+    void goToEnd();
+    void stepBack();
+    void stepForward();
+    void findMatch();
+    void applyMatch();
+    void unapplyMatch();
+
 private:
     Ui::Tracing *_ui;
 };

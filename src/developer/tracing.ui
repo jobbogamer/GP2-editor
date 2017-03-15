@@ -152,5 +152,95 @@
  <resources>
   <include location="icons.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>goToStartButton</sender>
+   <signal>clicked()</signal>
+   <receiver>Tracing</receiver>
+   <slot>goToStart()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>257</x>
+     <y>366</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>415</x>
+     <y>366</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>goToEndButton</sender>
+   <signal>clicked()</signal>
+   <receiver>Tracing</receiver>
+   <slot>goToEnd()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>575</x>
+     <y>366</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>415</x>
+     <y>366</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>stepForwardButton</sender>
+   <signal>clicked()</signal>
+   <receiver>Tracing</receiver>
+   <slot>stepForward()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>493</x>
+     <y>366</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>415</x>
+     <y>366</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>stepBackButton</sender>
+   <signal>clicked()</signal>
+   <receiver>Tracing</receiver>
+   <slot>stepBack()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>334</x>
+     <y>366</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>415</x>
+     <y>366</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>matchButton</sender>
+   <signal>clicked()</signal>
+   <receiver>Tracing</receiver>
+   <slot>findMatch()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>409</x>
+     <y>366</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>415</x>
+     <y>366</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>goToStart()</slot>
+  <slot>goToEnd()</slot>
+  <slot>stepBack()</slot>
+  <slot>stepForward()</slot>
+  <slot>findMatch()</slot>
+  <slot>applyMatch()</slot>
+  <slot>unapplyMatch()</slot>
+ </slots>
 </ui>
