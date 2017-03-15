@@ -24,7 +24,6 @@ public slots:
     void stepForward();
     void findMatch();
     void applyMatch();
-    void unapplyMatch();
 
 private:
     Ui::Tracing *_ui;

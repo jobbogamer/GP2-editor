@@ -241,6 +241,5 @@
   <slot>stepForward()</slot>
   <slot>findMatch()</slot>
   <slot>applyMatch()</slot>
-  <slot>unapplyMatch()</slot>
  </slots>
 </ui>

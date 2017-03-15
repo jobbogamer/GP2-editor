@@ -39,10 +39,7 @@ void Tracing::findMatch() {
 
 void Tracing::applyMatch() {
     qDebug() << "applyMatch()";
-}
 
-void Tracing::unapplyMatch() {
-    qDebug() << "unapplyMatch()";
 }
 
 }
