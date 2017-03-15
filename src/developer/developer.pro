@@ -80,7 +80,8 @@ HEADERS += \
     runconfig.hpp \
     tracing.hpp \
     translate/*.hpp \
-    translate/*.h
+    translate/*.h \
+    tracerunner.hpp
 
 FORMS += \
     welcome.ui \
@@ -182,7 +183,8 @@ SOURCES += \
     runconfig.cpp \
     tracing.cpp \
     translate/*.cpp \
-    translate/*.c
+    translate/*.c \
+    tracerunner.cpp
 
 OTHER_FILES += \
     templates/newproject.gpp \
