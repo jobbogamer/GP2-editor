@@ -13,139 +13,129 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QWidget" name="verticalLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>831</width>
-     <height>731</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <widget class="Developer::GraphWidget" name="graphView"/>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="controls" stretch="0,0,0,0,0,0,0">
-      <item>
-       <spacer name="horizontalSpacerLeft">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QToolButton" name="toolButton">
-        <property name="toolTip">
-         <string>Jump back to the start of execution (the input graph).</string>
-        </property>
-        <property name="text">
-         <string>Go to Start</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/icons/skip_backward.png</normaloff>:/icons/skip_backward.png</iconset>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="toolButton_2">
-        <property name="toolTip">
-         <string>Go back one step.</string>
-        </property>
-        <property name="text">
-         <string>Step Backward</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/icons/step_backward.png</normaloff>:/icons/step_backward.png</iconset>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="toolButton_3">
-        <property name="toolTip">
-         <string>Highlight the match for the next rule, if there are any.</string>
-        </property>
-        <property name="text">
-         <string>Find Match</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/icons/find_match.png</normaloff>:/icons/find_match.png</iconset>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="toolButton_4">
-        <property name="toolTip">
-         <string>Go forward one step.</string>
-        </property>
-        <property name="text">
-         <string>Step Forward</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/icons/step_forward.png</normaloff>:/icons/step_forward.png</iconset>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="toolButton_5">
-        <property name="toolTip">
-         <string>Jump to the end of execution (the output graph).</string>
-        </property>
-        <property name="text">
-         <string>Go to End</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/icons/skip_forward.png</normaloff>:/icons/skip_forward.png</iconset>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacerRight">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <widget class="Developer::ProgramEditor" name="programView"/>
-    </item>
-   </layout>
-  </widget>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="Developer::GraphWidget" name="graphView"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="controls">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QToolButton" name="goToStartButton">
+       <property name="toolTip">
+        <string>Jump back to the start of the program (the input graph).</string>
+       </property>
+       <property name="text">
+        <string>Go To Start</string>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/skip_backward.png</normaloff>:/icons/skip_backward.png</iconset>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="stepBackButton">
+       <property name="toolTip">
+        <string>Go back one step.</string>
+       </property>
+       <property name="text">
+        <string>Step Back</string>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/step_backward.png</normaloff>:/icons/step_backward.png</iconset>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="matchButton">
+       <property name="toolTip">
+        <string>Show the selected match for the next rule.</string>
+       </property>
+       <property name="text">
+        <string>Find Match</string>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/find_match.png</normaloff>:/icons/find_match.png</iconset>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="stepForwardButton">
+       <property name="toolTip">
+        <string>Go forward one step.</string>
+       </property>
+       <property name="text">
+        <string>Step Forward</string>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/step_forward.png</normaloff>:/icons/step_forward.png</iconset>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="goToEndButton">
+       <property name="toolTip">
+        <string>Jump to the end of the program (the output graph).</string>
+       </property>
+       <property name="text">
+        <string>Go To End</string>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/skip_forward.png</normaloff>:/icons/skip_forward.png</iconset>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Developer::ProgramEditor" name="programView"/>
+   </item>
+  </layout>
  </widget>
  <customwidgets>
   <customwidget>
