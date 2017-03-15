@@ -35,11 +35,26 @@ void Tracing::stepForward() {
 
 void Tracing::findMatch() {
     qDebug() << "findMatch()";
+
+    // Once a match has been shown, update the Find Match button to be an Apply
+    // Match button, by updating the icon, text, and connected slot.
+    _ui->matchButton->setIcon(QIcon(QPixmap(":/icons/apply_match.png")));
+    _ui->matchButton->setText(tr("Apply Match"));
+    _ui->matchButton->setToolTip(tr("Apply the rule using the chosen match."));
+    _ui->matchButton->disconnect(this);
+    this->connect(_ui->matchButton, SIGNAL(clicked()), SLOT(applyMatch()));
 }
 
 void Tracing::applyMatch() {
     qDebug() << "applyMatch()";
 
+    // When a match has been applied, change the Apply Match button back to a Find
+    // Match button, by updating the icon, text, and connected slot.
+    _ui->matchButton->setIcon(QIcon(QPixmap(":/icons/find_match.png")));
+    _ui->matchButton->setText(tr("Find Match"));
+    _ui->matchButton->setToolTip(tr("Show the selected match for the next rule."));
+    _ui->matchButton->disconnect(this);
+    this->connect(_ui->matchButton, SIGNAL(clicked()), SLOT(findMatch()));
 }
 
 }
