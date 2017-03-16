@@ -81,7 +81,7 @@ HEADERS += \
     tracing.hpp \
     translate/*.hpp \
     translate/*.h \
-    tracerunner.hpp
+    tracing/*.hpp
 
 FORMS += \
     welcome.ui \
@@ -184,7 +184,7 @@ SOURCES += \
     tracing.cpp \
     translate/*.cpp \
     translate/*.c \
-    tracerunner.cpp
+    tracing/*.cpp
 
 OTHER_FILES += \
     templates/newproject.gpp \
