@@ -45,7 +45,7 @@ public slots:
 
 signals:
     void obtainedResultGraph(QString resultLocation, RunConfig* runConfig);
-    void tracefileUpdated(QString tracefileLocation, RunConfig* runConfig);
+    void tracefileUpdated(QString tracefileLocation, RunConfig* runConfig, Project* project);
     
 private slots:
     void on_deleteButton_clicked();

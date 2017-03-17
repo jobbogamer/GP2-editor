@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include "runconfig.hpp"
+#include "tracing/tracerunner.hpp"
+#include "project.hpp"
 
 namespace Ui {
 class Tracing;
@@ -26,10 +28,11 @@ public slots:
     void findMatch();
     void applyMatch();
 
-    void loadTracefile(QString tracefileLocation, RunConfig* runConfig);
+    void loadTracefile(QString tracefileLocation, RunConfig* runConfig, Project *project);
 
 private:
-    Ui::Tracing *_ui;
+    Ui::Tracing* _ui;
+    TraceRunner* _traceRunner;
 };
 
 }

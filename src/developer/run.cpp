@@ -87,8 +87,8 @@ void Run::handleResultGraph(QString resultLocation, RunConfig* runConfig)
     emit obtainedResultGraph(resultLocation, runConfig);
 }
 
-void Run::handleTracefile(QString tracefileLocation, RunConfig* runConfig) {
-    emit tracefileUpdated(tracefileLocation, runConfig);
+void Run::handleTracefile(QString tracefileLocation, RunConfig* runConfig, Project* project) {
+    emit tracefileUpdated(tracefileLocation, runConfig, project);
 }
 
 void Run::handleRunConfigListChanged()
@@ -149,8 +149,8 @@ RunConfiguration *Run::addRunConfiguration(RunConfig* runConfig)
 //        //_project->addRunConfig(runConfig);
 //    }
 
-    connect (runConfiguration, SIGNAL(obtainedResultGraph(QString, RunConfig*)), this, SLOT(handleResultGraph(QString, RunConfig*))  );
-    connect (runConfiguration, SIGNAL(tracefileUpdated(QString,RunConfig*)),     this, SLOT(handleTracefile(QString,RunConfig*))     );
+    connect (runConfiguration, SIGNAL(obtainedResultGraph(QString, RunConfig*)),      this, SLOT(handleResultGraph(QString, RunConfig*))      );
+    connect (runConfiguration, SIGNAL(tracefileUpdated(QString,RunConfig*,Project*)), this, SLOT(handleTracefile(QString,RunConfig*,Project*)));
 
     return runConfiguration;
 }

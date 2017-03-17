@@ -3,13 +3,14 @@
 
 #include <QXmlStreamReader>
 #include "graph.hpp"
+#include "program.hpp"
 
 namespace Developer {
 
 class TraceRunner
 {
 public:
-    TraceRunner();
+    TraceRunner(QString traceFile, Graph* graph, Program* program);
 
 private:
     Graph* _graph;

@@ -7,7 +7,8 @@ namespace Developer {
 
 Tracing::Tracing(QWidget *parent) :
     QWidget(parent),
-    _ui(new Ui::Tracing)
+    _ui(new Ui::Tracing),
+    _traceRunner(0)
 {
     _ui->setupUi(this);
 }
@@ -18,8 +19,16 @@ Tracing::~Tracing()
 }
 
 
-void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig) {
+void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Project* project) {
     qDebug() << "Obtained tracefile " << tracefileLocation << " from run config " << runConfig->name();
+
+    /* Create a new TraceRunner which uses the new tracefile.
+     * This will overwrite any ongoing trace, but if the user has re-run
+     * the program, they probably want to start from the beginning anyway. */
+    if (_traceRunner) { delete _traceRunner; }
+    _traceRunner = new TraceRunner(tracefileLocation,
+                                   project->graph(runConfig->graph()),
+                                   project->program(runConfig->program()));
 }
 
 void Tracing::goToStart() {

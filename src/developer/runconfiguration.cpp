@@ -397,7 +397,7 @@ void RunConfiguration::runConfiguration()
     emit obtainedResultGraph(output, _config);
 
     if (_config->hasProgramTracing()) {
-        emit tracefileUpdated(tracefileOutput, _config);
+        emit tracefileUpdated(tracefileOutput, _config, _project);
     }
 }
 
