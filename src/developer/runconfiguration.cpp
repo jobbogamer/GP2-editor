@@ -334,8 +334,12 @@ void RunConfiguration::runConfiguration()
         outputFile.close();
     }
 
+    /* Build a path to store a tracefile in. This won't be used unless tracing is enabled for
+     * the run configuration. */
+    QString tracefileOutput = results + "/tracefile.gptrace";
+
     /* Call the compiler and run the executable */
-    bool success = run(programTmp, hostgraphFile, output);
+    bool success = run(programTmp, hostgraphFile, output, tracefileOutput);
     if (!success)
     {
         // The Compiler failed to validate/compile/execute (instead of giving a proper Fail)
@@ -391,9 +395,13 @@ void RunConfiguration::runConfiguration()
 
     //Graph* resultGraph = new Graph(output, this);
     emit obtainedResultGraph(output, _config);
+
+    if (_config->hasProgramTracing()) {
+        emit tracefileUpdated(tracefileOutput, _config);
+    }
 }
 
-bool RunConfiguration::run(QString programFile, QString graphFile, QString outputFile)
+bool RunConfiguration::run(QString programFile, QString graphFile, QString outputFile, QString traceOutputFile)
 {
     /* Location of GP Compiler */
     //QString GPCompilerDir = "~/github/GP2/Compiler";
@@ -608,6 +616,12 @@ bool RunConfiguration::run(QString programFile, QString graphFile, QString outpu
     RunCmd += "cd /tmp/gp2";
     RunCmd += " && make && ";
     RunCmd += "./gp2run && cp gp2.output " + outputFile.replace(" ","\\ ");
+
+    /* If tracing was enabled, copy the tracefile (/tmp/gp2/gp2.gptrace) into the results
+     * directory so that the trace runner can access it. */
+    if (_config->hasProgramTracing()) {
+        RunCmd += " && cp gp2.gptrace " + traceOutputFile.replace(" ", "\\ ");
+    }
 
     qDebug () << "  Attempting to execute GP2 Program:" << RunCmd;
 //    bool success = (call(RunCmd) == 0);

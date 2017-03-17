@@ -45,6 +45,7 @@ public slots:
 
 signals:
     void obtainedResultGraph(QString resultLocation, RunConfig* runConfig);
+    void tracefileUpdated(QString tracefileLocation, RunConfig* runConfig);
     
 private slots:
     void on_deleteButton_clicked();
@@ -54,7 +55,7 @@ private:
     Project *_project;
     bool _existsInProject;
     RunConfig *_config;
-    bool run(QString program, QString graph, QString output);
+    bool run(QString program, QString graph, QString output, QString traceOutputFile);
 		int call(QString cmd);
     QString rulesToQString(QVector<Rule *> rules);
 
