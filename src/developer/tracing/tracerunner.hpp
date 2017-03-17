@@ -2,6 +2,7 @@
 #define TRACERUNNER_HPP
 
 #include <QXmlStreamReader>
+#include "graph.hpp"
 
 namespace Developer {
 
