@@ -14,7 +14,7 @@ public:
 
 private:
     Graph* _graph;
-    QString _program;
+    Program* _program;
     QXmlStreamReader _xml;
 };
 
