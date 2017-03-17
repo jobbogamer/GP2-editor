@@ -2,6 +2,7 @@
 #define TRACING_H
 
 #include <QWidget>
+#include "runconfig.hpp"
 
 namespace Ui {
 class Tracing;
@@ -24,6 +25,8 @@ public slots:
     void stepForward();
     void findMatch();
     void applyMatch();
+
+    void loadTracefile(QString tracefileLocation, RunConfig* runConfig);
 
 private:
     Ui::Tracing *_ui;

@@ -17,6 +17,11 @@ Tracing::~Tracing()
     delete _ui;
 }
 
+
+void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig) {
+    qDebug() << "Obtained tracefile " << tracefileLocation << " from run config " << runConfig->name();
+}
+
 void Tracing::goToStart() {
     qDebug() << "goToStart()";
 }

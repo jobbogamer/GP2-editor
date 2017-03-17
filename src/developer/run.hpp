@@ -32,11 +32,13 @@ public:
 
 signals:
     void obtainedResultGraph(QString resultLocation, RunConfig* runConfig);
+    void tracefileUpdated(QString resultLocation, RunConfig* RunConfig);
 
 public slots:
     RunConfiguration *addRunConfiguration(RunConfig* runConfig = 0);
     void handleResultGraph(QString resultLocation, RunConfig* runConfig);
     void handleRunConfigListChanged();
+    void handleTracefile(QString tracefileLocation, RunConfig* runConfig);
     
 private:
     Ui::Run *_ui;

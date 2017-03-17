@@ -97,6 +97,9 @@ MainWindow::MainWindow(QWidget *parent)
                            tr("Tracing")
                           );
 
+    /* When a run configuration produces a tracefile, pass it on to the tracing tab. */
+    connect(_run, SIGNAL(tracefileUpdated(QString,RunConfig*)), _tracing, SLOT(loadTracefile(QString,RunConfig*)));
+
     // No open project by default, so set that state
     setProjectActive(false);
 

@@ -87,6 +87,10 @@ void Run::handleResultGraph(QString resultLocation, RunConfig* runConfig)
     emit obtainedResultGraph(resultLocation, runConfig);
 }
 
+void Run::handleTracefile(QString tracefileLocation, RunConfig* runConfig) {
+    emit tracefileUpdated(tracefileLocation, runConfig);
+}
+
 void Run::handleRunConfigListChanged()
 {
     QVector<RunConfig*> configs = _project->runConfigurations();
@@ -146,6 +150,7 @@ RunConfiguration *Run::addRunConfiguration(RunConfig* runConfig)
 //    }
 
     connect (runConfiguration, SIGNAL(obtainedResultGraph(QString, RunConfig*)), this, SLOT(handleResultGraph(QString, RunConfig*))  );
+    connect (runConfiguration, SIGNAL(tracefileUpdated(QString,RunConfig*)),     this, SLOT(handleTracefile(QString,RunConfig*))     );
 
     return runConfiguration;
 }
