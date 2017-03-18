@@ -2,6 +2,26 @@
 *.user
 *.pro.user.*
 
+# Qt generated files
+ui_*.h
+moc*.cpp
+moc*.cxx
+moc*.cxx_parameters
+qrc_*.cpp
+*.qrc.depends
+
+# CMake generated makefiles
+Makefile
+src/developer/translate/CMakeFiles
+*.cmake
+
+# Built static libs and binaries
+*.a
+*.app
+src/gpxc/gpxc
+src/gprc/gprc
+src/gpmake/gpmake
+
 # Don't track generated documentation
 docs/*
 
