@@ -12,4 +12,8 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     qDebug() << "and program: " << program->program();
 }
 
+Graph* TraceRunner::graph() {
+    return _graph;
+}
+
 }

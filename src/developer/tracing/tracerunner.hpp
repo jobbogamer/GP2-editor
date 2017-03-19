@@ -11,6 +11,7 @@ class TraceRunner
 {
 public:
     TraceRunner(QString traceFile, Graph* graph, Program* program);
+    Graph* graph();
 
 private:
     Graph* _graph;

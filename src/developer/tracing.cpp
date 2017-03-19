@@ -29,6 +29,11 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
     _traceRunner = new TraceRunner(tracefileLocation,
                                    project->graph(runConfig->graph()),
                                    project->program(runConfig->program()));
+
+    /* Load the graph into the graph view. Note that since this is just a
+    pointer to the graph, any changes made to the graph will automatically
+    be reflected in the graph view. */
+    _ui->graphView->setGraph(_traceRunner->graph());
 }
 
 void Tracing::goToStart() {
