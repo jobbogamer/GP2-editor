@@ -72,7 +72,7 @@ SET(GPDeveloper_HPP_SRCS
     src/developer/runconfiguration.hpp
     src/developer/styledbutton.hpp
     src/developer/tracing.hpp
-    src/developer/tracerunner.hpp
+    src/developer/tracing/tracerunner.hpp
     src/developer/welcome.hpp
 )
 
