@@ -18,6 +18,21 @@ Tracing::~Tracing()
     delete _ui;
 }
 
+/**
+ * Overrides QWidget::showEvent() to signal MainWindow::graphHasFocus() when
+ * the tracing tab becomes visible.
+ */
+void Tracing::showEvent(QShowEvent* event) {
+    emit becameVisible(_ui->graphView);
+}
+
+/**
+ * Overrides QWidget::hideEvent() to signal MainWindow::graphLostFocus() when
+ * the tracing tab becomes invisible.
+ */
+void Tracing::hideEvent(QHideEvent* event) {
+    emit becameHidden(_ui->graphView);
+}
 
 void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Project* project) {
     qDebug() << "Obtained tracefile " << tracefileLocation << " from run config " << runConfig->name();

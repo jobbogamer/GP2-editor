@@ -5,6 +5,7 @@
 #include "runconfig.hpp"
 #include "tracing/tracerunner.hpp"
 #include "project.hpp"
+#include "graphview/graphwidget.hpp"
 
 namespace Ui {
 class Tracing;
@@ -20,6 +21,9 @@ public:
     explicit Tracing(QWidget *parent = 0);
     ~Tracing();
 
+    virtual void showEvent(QShowEvent* event);
+    virtual void hideEvent(QHideEvent* event);
+
 public slots:
     void goToStart();
     void goToEnd();
@@ -29,6 +33,10 @@ public slots:
     void applyMatch();
 
     void loadTracefile(QString tracefileLocation, RunConfig* runConfig, Project *project);
+
+signals:
+    void becameVisible(GraphWidget* widget);
+    void becameHidden(GraphWidget* widget);
 
 private:
     Ui::Tracing* _ui;

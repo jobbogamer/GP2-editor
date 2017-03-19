@@ -97,6 +97,10 @@ MainWindow::MainWindow(QWidget *parent)
                            tr("Tracing")
                           );
 
+    /* When the tracing tab becomes visible or invisible, toggle its graph's focused state. */
+    connect(_tracing, SIGNAL(becameVisible(GraphWidget*)), this, SLOT(graphHasFocus(GraphWidget*)));
+    connect(_tracing, SIGNAL(becameHidden(GraphWidget*)), this, SLOT(graphLostFocus(GraphWidget*)));
+
     /* When a run configuration produces a tracefile, pass it on to the tracing tab. */
     connect(_run, SIGNAL(tracefileUpdated(QString,RunConfig*,Project*)), _tracing, SLOT(loadTracefile(QString,RunConfig*,Project*)));
 
@@ -1050,6 +1054,8 @@ void MainWindow::graphHasFocus(GraphWidget *graphWidget)
     _currentGraph = graphWidget;
     _ui->menuLayout->setEnabled(true);
     _ui->menuExport->setEnabled(true);
+
+    qDebug() << "A graph just got focus";
 }
 
 void MainWindow::graphLostFocus(GraphWidget *graphWidget)
@@ -1060,6 +1066,8 @@ void MainWindow::graphLostFocus(GraphWidget *graphWidget)
         //_currentGraph = 0;
         //_ui->menuLayout->setEnabled(false);
     }
+
+    qDebug() << "A graph just lost focus";
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
