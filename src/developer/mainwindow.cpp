@@ -97,12 +97,19 @@ MainWindow::MainWindow(QWidget *parent)
                            tr("Tracing")
                           );
 
+    /* Set the tracing tab to be disabled, and set its tooltip to explain why. */
+    _ui->tabWidget->setTabEnabled("default", 4, false);
+    _ui->tabWidget->setTabTooltip("default", 4, "No tracefile available; run a program with tracing enabled");
+
     /* When the tracing tab becomes visible or invisible, toggle its graph's focused state. */
     connect(_tracing, SIGNAL(becameVisible(GraphWidget*)), this, SLOT(graphHasFocus(GraphWidget*)));
     connect(_tracing, SIGNAL(becameHidden(GraphWidget*)), this, SLOT(graphLostFocus(GraphWidget*)));
 
-    /* When a run configuration produces a tracefile, pass it on to the tracing tab. */
+    /* When a run configuration produces a tracefile, pass it on to the tracing tab.
+    Also connect it to this MainWindow so that we can enable the tracing tab when a
+    tracefile begins available. */
     connect(_run, SIGNAL(tracefileUpdated(QString,RunConfig*,Project*)), _tracing, SLOT(loadTracefile(QString,RunConfig*,Project*)));
+    connect(_run, SIGNAL(tracefileUpdated(QString,RunConfig*,Project*)), this, SLOT(tracefileAvailable()));
 
     // No open project by default, so set that state
     setProjectActive(false);
@@ -275,11 +282,19 @@ void MainWindow::setProjectActive(bool state)
     _ui->quickRunWidget->setVisible(false);
 
     // Enable or disable all tabs, since it makes no sense to go to the
-    // edit, run, results, or tracing tabs if no project is open.
+    // edit, run, or results if no project is open.
     _ui->tabWidget->setTabEnabled("default", 1, state);
     _ui->tabWidget->setTabEnabled("default", 2, state);
     _ui->tabWidget->setTabEnabled("default", 3, state);
-    _ui->tabWidget->setTabEnabled("default", 4, state);
+
+    // There is an additional condition for the tracing tab - a tracefile
+    // must be available, which will be determined using the tracefileAvailable()
+    // slot. This means we don't automatically enable the tracing tab when a project
+    // is open. We just have to disable the tracing tab if no project is open.
+    if (!state) {
+       _ui->tabWidget->setTabEnabled("default", 4, false);
+       _ui->tabWidget->setTabTooltip("default", 4, "No tracefile available; run a program with tracing enabled");
+    }
 
     // Enable or disable elements of the drop-down menus, again because
     // using these makes no sense if no project is open.
@@ -1068,6 +1083,14 @@ void MainWindow::graphLostFocus(GraphWidget *graphWidget)
     }
 
     qDebug() << "A graph just lost focus";
+}
+
+void MainWindow::tracefileAvailable()
+{
+    // When a tracefile becomes available, enable the tracing tab and remove
+    // the tooltip.
+    _ui->tabWidget->setTabEnabled("default", 4, true);
+    _ui->tabWidget->setTabTooltip("default", 4, "");
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

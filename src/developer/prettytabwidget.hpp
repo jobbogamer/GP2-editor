@@ -182,6 +182,14 @@ public:
      */
     QPair<QString, int> addTab(QWidget *page, const QIcon &icon, const QString &label, const QString &menu = QString());
 
+    /*!
+     * \brief setTabTooltip Set the tooltip for a tab in the menu
+     * \param menu    The menu the tab appears in
+     * \param index   The index of the tab in the menu
+     * \param tooltip The text to appear in the tab's tooltip
+     */
+    void setTabTooltip(const QString &menu, int index, const QString &tooltip);
+
 signals:
     /*!
      * \brief Signal emitted when the current tab has changed

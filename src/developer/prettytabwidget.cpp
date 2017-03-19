@@ -73,6 +73,11 @@ QPair<QString, int> PrettyTabWidget::addTab(QWidget *page, const QIcon &icon, co
     return index;
 }
 
+void PrettyTabWidget::setTabTooltip(const QString &menu, int index, const QString &tooltip)
+{
+    _ui->prettyTabs->tab(menu, index)->setToolTip(tooltip);
+}
+
 void PrettyTabWidget::setCurrentIndex(QString menu, int index)
 {
     QPair<QString, int> tabIndex(menu, index);

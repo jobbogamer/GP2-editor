@@ -267,6 +267,8 @@ public slots:
 
     void currentFileChanged(GPFile *f);
 
+    void tracefileAvailable();
+
     void graphHasFocus(GraphWidget *graphWidget);
     void graphLostFocus(GraphWidget *graphWidget);
 
