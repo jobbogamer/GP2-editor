@@ -2,6 +2,7 @@
 #include "ui_tracing.h"
 
 #include <QDebug>
+#include <QMessageBox>
 
 namespace Developer {
 
@@ -44,6 +45,15 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
     _traceRunner = new TraceRunner(tracefileLocation,
                                    project->graph(runConfig->graph()),
                                    project->program(runConfig->program()));
+
+    if (!_traceRunner->isInitialised()) {
+        QMessageBox::warning(
+            this,
+            tr("Error Loading Tracefile"),
+            tr("An error occurred when loading the tracefile. See the log for details.")
+        );
+        return;
+    }
 
     /* Load the graph into the graph view. Note that since this is just a
     pointer to the graph, any changes made to the graph will automatically
