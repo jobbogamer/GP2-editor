@@ -109,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
     Also connect it to this MainWindow so that we can enable the tracing tab when a
     tracefile begins available. */
     connect(_run, SIGNAL(tracefileUpdated(QString,RunConfig*,Project*)), _tracing, SLOT(loadTracefile(QString,RunConfig*,Project*)));
-    connect(_run, SIGNAL(tracefileUpdated(QString,RunConfig*,Project*)), this, SLOT(tracefileAvailable()));
+    connect(_tracing, SIGNAL(tracingReady()), this, SLOT(tracefileAvailable()));
 
     // No open project by default, so set that state
     setProjectActive(false);

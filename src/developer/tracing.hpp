@@ -35,6 +35,7 @@ public slots:
     void loadTracefile(QString tracefileLocation, RunConfig* runConfig, Project *project);
 
 signals:
+    void tracingReady();
     void becameVisible(GraphWidget* widget);
     void becameHidden(GraphWidget* widget);
 

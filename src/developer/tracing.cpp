@@ -59,6 +59,10 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
     pointer to the graph, any changes made to the graph will automatically
     be reflected in the graph view. */
     _ui->graphView->setGraph(_traceRunner->graph());
+
+    // We can now signal that tracing is ready, because we have everything
+    // we need to show the tracing tab.
+    emit tracingReady();
 }
 
 void Tracing::goToStart() {
