@@ -1069,8 +1069,6 @@ void MainWindow::graphHasFocus(GraphWidget *graphWidget)
     _currentGraph = graphWidget;
     _ui->menuLayout->setEnabled(true);
     _ui->menuExport->setEnabled(true);
-
-    qDebug() << "A graph just got focus";
 }
 
 void MainWindow::graphLostFocus(GraphWidget *graphWidget)
@@ -1081,8 +1079,6 @@ void MainWindow::graphLostFocus(GraphWidget *graphWidget)
         //_currentGraph = 0;
         //_ui->menuLayout->setEnabled(false);
     }
-
-    qDebug() << "A graph just lost focus";
 }
 
 void MainWindow::tracefileAvailable()
