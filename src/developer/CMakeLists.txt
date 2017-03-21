@@ -73,6 +73,7 @@ SET(GPDeveloper_HPP_SRCS
     src/developer/styledbutton.hpp
     src/developer/tracing.hpp
     src/developer/tracing/tracerunner.hpp
+    src/developer/tracing/tracestep.hpp
     src/developer/welcome.hpp
 )
 
