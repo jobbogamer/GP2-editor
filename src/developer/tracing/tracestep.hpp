@@ -38,26 +38,37 @@ struct GraphChange {
 };
 
 enum TraceStepType {
+    RULE,
+    RULE_MATCH,
     RULE_APPLICATION,
     RULE_SET,
     LOOP,
+    LOOP_ITERATION,
     PROCEDURE,
-    IF_CONDITION,
-    TRY_CONDITION,
+    IF_CONTEXT,
+    TRY_CONTEXT,
+    BRANCH_CONDITION,
     THEN_BRANCH,
     ELSE_BRANCH,
+    OR_CONTEXT,
     OR_LEFT,
     OR_RIGHT,
     SKIP,
     BREAK,
     FAIL,
-    END_CONTEXT
+    END_CONTEXT,
+    UNKNOWN
 };
 
 struct TraceStep {
     TraceStepType type;
     QVector<GraphChange> graphChanges;
 };
+
+/**
+ * Converts from an XML tag name to a TraceStepType enum value.
+ */
+TraceStepType stepTypeFromXML(QStringRef elementName);
 
 }
 

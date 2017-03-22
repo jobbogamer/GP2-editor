@@ -42,6 +42,11 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     // If we reach this point, we have successfully opened the tracefile,
     // initialised the XML reader, and found the root <trace> element.
     _initialised = true;
+
+    bool s = true;
+    do {
+        s = parseStep();
+    } while(s && !_parseComplete);
 }
 
 TraceRunner::~TraceRunner() {
@@ -77,26 +82,54 @@ bool TraceRunner::parseStep() {
         return false;
     }
 
-    if (_xml->readNextStartElement()) {
+    // Read the next XML token, then decide what to do based on the token type.
+    QXmlStreamReader::TokenType tokenType = _xml->readNext();
+    switch (tokenType) {
+    case QXmlStreamReader::StartElement:
+        // Get the name of the element so we can decide what type of step this is.
+        step.type = stepTypeFromXML(_xml->name());
+        qDebug() << "Found start element" << _xml->name();
+        // TODO: If it's an <apply> element, keep parsing until the end element is
+        // reached, to get the graph changez.
+        break;
 
-    }
-    else {
-        // readNextStartElement() returns false if a closing tag is reached or
-        // an error occurs.
-        if (_xml->hasError()) {
-            return false;
+    case QXmlStreamReader::EndElement:
+        // Get the name of the element so we can decide what type of step this is.
+        step.type = stepTypeFromXML(_xml->name());
+        qDebug() << "Found end element" << _xml->name();
+        break;
+
+    case QXmlStreamReader::EndDocument:
+        // We have reached the end of the XML file. We don't want to add any steps
+        // to the vector, because this doesn't count as a step, so we'll return
+        // early here.
+        qDebug() << "Found end of document";
+        _parseComplete = true;
+        return true;
+
+    case QXmlStreamReader::Invalid:
+        // A parse error has occurred. We will check the type of error here. If it
+        // is PrematureEndOfDocumentError, we will absorb the error and mark the
+        // parse as complete; this error will occur if a nonterminating program has
+        // been traced and killed with ^C.
+        if (_xml->error() == QXmlStreamReader::PrematureEndOfDocumentError) {
+            _parseComplete = true;
+            // We don't want to push a trace step for an invalid element, so return
+            // early here. We're returning true because we're not classing this as
+            // an error.
+            qDebug() << "PrematureEndOfDocument";
+            return true;
         }
         else {
-            // There was no error, a closing tag was reached.
-            step.type = END_CONTEXT;
-            step.graphChanges.clear();
+            // This was some other kind of parse error, so we need to return false.
+            qDebug() << "ERROR!!!!";
+            return false;
         }
-    }
 
-    // Check again whether we have reached the end of the file, since the
-    // element we just parsed could have been the last element.
-    if (_xml->atEnd()) {
-        _parseComplete = true;
+    default:
+        // We do not care about the other token types because we will never
+        // encounter them.
+        break;
     }
 
     // Push the trace step into the vector, and return true, since if we have
@@ -106,7 +139,10 @@ bool TraceRunner::parseStep() {
 }
 
 QString TraceRunner::getXMLError() {
-    return _xml->errorString();
+    return QObject::tr("%1\nLine %2, column %3")
+            .arg(_xml->errorString())
+            .arg(_xml->lineNumber())
+            .arg(_xml->columnNumber());
 }
 
 }
