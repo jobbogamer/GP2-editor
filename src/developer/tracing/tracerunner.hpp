@@ -4,6 +4,7 @@
 #include <QXmlStreamReader>
 #include <QFile>
 #include <QVector>
+#include <QStack>
 #include <boost/optional.hpp>
 #include "graph.hpp"
 #include "program.hpp"
@@ -60,14 +61,16 @@ public:
     /**
      * Move forward in the trace by one step, updating the state of the graph
      * if the step made any changes to it.
+     * Returns true if stepping is successful, or false if an error occurs.
      */
-    void stepForward();
+    bool stepForward();
 
     /**
      * Move backward in the trace by one step, reverting the state of the graph
      * if the step had previously made any changes to it.
+     * Returns true if stepping is successful, or false if an error occurs.
      */
-    void stepBackward();
+    bool stepBackward();
 
     /**
      * Returns the match morphism for the current rule, if there is one. Since a
@@ -82,13 +85,20 @@ public:
      */
     void applyMatch();
 
+    QString getXMLError();
+
 private:
     Graph* _graph;
     Program* _program;
     QXmlStreamReader* _xml;
     QFile _tracefile;
     bool _initialised;
+    bool _parseComplete;
     QVector<TraceStep> _traceSteps;
+    QStack<TraceStepType> _contextStack;
+    int _tracePosition;
+
+    bool parseStep();
 };
 
 }

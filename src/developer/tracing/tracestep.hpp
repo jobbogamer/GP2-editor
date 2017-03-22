@@ -50,7 +50,8 @@ enum TraceStepType {
     OR_RIGHT,
     SKIP,
     BREAK,
-    FAIL
+    FAIL,
+    END_CONTEXT
 };
 
 struct TraceStep {

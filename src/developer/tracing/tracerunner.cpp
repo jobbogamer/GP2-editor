@@ -10,7 +10,10 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     _program(program),
     _tracefile(traceFile),
     _initialised(false),
-    _traceSteps()
+    _parseComplete(false),
+    _traceSteps(),
+    _contextStack(),
+    _tracePosition(-1)
 {
     // Attempt to open the tracefile.
     if (!_tracefile.open(QFile::ReadOnly | QFile::Text)) {
@@ -52,6 +55,58 @@ Graph* TraceRunner::graph() {
 
 bool TraceRunner::isInitialised() {
     return _initialised;
+}
+
+bool TraceRunner::parseStep() {
+    // As parsing continues, this TraceStep object will be updated to reflect
+    // the parsed step. It will be pushed into the steps vector at the end of
+    // this method.
+    TraceStep step;
+
+    if (_xml->atEnd()) {
+        // If we have reached the end of the tracefile, there is no more parsing
+        // to do. Mark parsing as complete and return true, since the end of the
+        // file is not an error.
+        _parseComplete = true;
+        return true;
+    }
+
+    if (_xml->hasError()) {
+        // All we can do here is return false. The caller will have to use the
+        // getXMLError() method to get the details.
+        return false;
+    }
+
+    if (_xml->readNextStartElement()) {
+
+    }
+    else {
+        // readNextStartElement() returns false if a closing tag is reached or
+        // an error occurs.
+        if (_xml->hasError()) {
+            return false;
+        }
+        else {
+            // There was no error, a closing tag was reached.
+            step.type = END_CONTEXT;
+            step.graphChanges.clear();
+        }
+    }
+
+    // Check again whether we have reached the end of the file, since the
+    // element we just parsed could have been the last element.
+    if (_xml->atEnd()) {
+        _parseComplete = true;
+    }
+
+    // Push the trace step into the vector, and return true, since if we have
+    // reached this point, there weren't any XML errors.
+    _traceSteps.push_back(step);
+    return true;
+}
+
+QString TraceRunner::getXMLError() {
+    return _xml->errorString();
 }
 
 }
