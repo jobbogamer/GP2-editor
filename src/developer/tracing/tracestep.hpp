@@ -2,6 +2,7 @@
 #define TRACESTEP_H
 
 #include <QVector>
+#include <QPair>
 #include <boost/variant.hpp>
 #include "node.hpp"
 #include "edge.hpp"
@@ -10,6 +11,13 @@
 namespace Developer {
 
 typedef boost::variant<edge_t, node_t> graph_item_t;
+
+/**
+ * A Morphism is a pair of vectors representing a rule match morphism. The
+ * first item is a vector of node_t objects, and the second is a vector of
+ * edge_t objects.
+ */
+typedef QPair< QVector<node_t>, QVector<edge_t> > Morphism;
 
 enum GraphChangeType {
     ADD_EDGE,

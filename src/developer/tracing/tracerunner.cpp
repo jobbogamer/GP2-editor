@@ -9,7 +9,8 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     _graph(graph),
     _program(program),
     _tracefile(traceFile),
-    _initialised(false)
+    _initialised(false),
+    _traceSteps()
 {
     // Attempt to open the tracefile.
     if (!_tracefile.open(QFile::ReadOnly | QFile::Text)) {
