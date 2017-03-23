@@ -42,6 +42,8 @@ signals:
 private:
     Ui::Tracing* _ui;
     TraceRunner* _traceRunner;
+
+    void updateButtons();
 };
 
 }

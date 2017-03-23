@@ -62,6 +62,22 @@ bool TraceRunner::isInitialised() {
     return _initialised;
 }
 
+bool TraceRunner::isForwardStepAvailable() {
+    return false;
+}
+
+bool TraceRunner::isBackwardStepAvailable() {
+    return false;
+}
+
+bool TraceRunner::isFindMatchAvailable() {
+    return false;
+}
+
+bool TraceRunner::isMatchApplicationAvailable() {
+    return false;
+}
+
 bool TraceRunner::parseStep() {
     // As parsing continues, this TraceStep object will be updated to reflect
     // the parsed step. It will be pushed into the steps vector at the end of

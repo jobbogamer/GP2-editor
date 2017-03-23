@@ -55,6 +55,8 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
         return;
     }
 
+    updateButtons();
+
     /* Load the graph into the graph view. Note that since this is just a
     pointer to the graph, any changes made to the graph will automatically
     be reflected in the graph view. */
@@ -67,42 +69,72 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
 
 void Tracing::goToStart() {
     qDebug() << "goToStart()";
+    updateButtons();
 }
 
 void Tracing::goToEnd() {
     qDebug() << "goToEnd()";
+    updateButtons();
 }
 
 void Tracing::stepBack() {
     qDebug() << "stepBack()";
+    updateButtons();
 }
 
 void Tracing::stepForward() {
     qDebug() << "stepForward()";
+    updateButtons();
 }
 
 void Tracing::findMatch() {
     qDebug() << "findMatch()";
-
-    // Once a match has been shown, update the Find Match button to be an Apply
-    // Match button, by updating the icon, text, and connected slot.
-    _ui->matchButton->setIcon(QIcon(QPixmap(":/icons/apply_match.png")));
-    _ui->matchButton->setText(tr("Apply Match"));
-    _ui->matchButton->setToolTip(tr("Apply the rule using the chosen match."));
-    _ui->matchButton->disconnect(this);
-    this->connect(_ui->matchButton, SIGNAL(clicked()), SLOT(applyMatch()));
+    updateButtons();
 }
 
 void Tracing::applyMatch() {
     qDebug() << "applyMatch()";
+    updateButtons();
+}
 
-    // When a match has been applied, change the Apply Match button back to a Find
-    // Match button, by updating the icon, text, and connected slot.
-    _ui->matchButton->setIcon(QIcon(QPixmap(":/icons/find_match.png")));
-    _ui->matchButton->setText(tr("Find Match"));
-    _ui->matchButton->setToolTip(tr("Show the selected match for the next rule."));
-    _ui->matchButton->disconnect(this);
-    this->connect(_ui->matchButton, SIGNAL(clicked()), SLOT(findMatch()));
+/**
+ * Updates the enabled/disabled state of the control strip buttons based on the
+ * state of the TraceRunner.
+ */
+void Tracing::updateButtons() {
+    // If backwards steps are not available, we must be at the start of the
+    // trace, so there's no point jumping to the start or stepping backwards.
+    bool backAvailable = _traceRunner->isBackwardStepAvailable();
+    _ui->goToStartButton->setEnabled(backAvailable);
+    _ui->stepBackButton->setEnabled(backAvailable);
+
+    // If forward steps are not available, we must be at the end of the trace,
+    // so there's no point jumping to the end or stepping forwards.
+    bool forwardAvailable = _traceRunner->isForwardStepAvailable();
+    _ui->goToEndButton->setEnabled(forwardAvailable);
+    _ui->stepForwardButton->setEnabled(forwardAvailable);
+
+    // Set up the match button based on the current state of the trace. Either
+    // make it into the "find match" button, the "apply match" button, or
+    // disable it altogether.
+    // We will default to the "find match" icon and tooltip, and only change it
+    // in the case where match application is available.
+    if (_traceRunner->isMatchApplicationAvailable()) {
+        _ui->matchButton->setIcon(QIcon(QPixmap(":/icons/apply_match.png")));
+        _ui->matchButton->setText(tr("Apply Match"));
+        _ui->matchButton->setToolTip(tr("Apply the rule using the chosen match."));
+        _ui->matchButton->disconnect(this);
+        this->connect(_ui->matchButton, SIGNAL(clicked()), SLOT(applyMatch()));
+        _ui->matchButton->setEnabled(true);
+    }
+    else {
+        _ui->matchButton->setIcon(QIcon(QPixmap(":/icons/find_match.png")));
+        _ui->matchButton->setText(tr("Find Match"));
+        _ui->matchButton->setToolTip(tr("Show the selected match for the next rule."));
+        _ui->matchButton->disconnect(this);
+        this->connect(_ui->matchButton, SIGNAL(clicked()), SLOT(findMatch()));
+        _ui->matchButton->setEnabled(_traceRunner->isFindMatchAvailable());
+    }
 }
 
 }
