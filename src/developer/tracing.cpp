@@ -78,12 +78,14 @@ void Tracing::goToEnd() {
 }
 
 void Tracing::stepBack() {
-    qDebug() << "stepBack()";
+    // Assuming the button is only enabled if a backwards step is available.
+    _traceRunner->stepBackward();
     updateButtons();
 }
 
 void Tracing::stepForward() {
-    qDebug() << "stepForward()";
+    // Assuming the button is only enabled if a forward step is available.
+    _traceRunner->stepForward();
     updateButtons();
 }
 

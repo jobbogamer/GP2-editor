@@ -1,5 +1,6 @@
 #include "tracerunner.hpp"
 
+#include <QtGlobal>
 #include <QDebug>
 #include <QIODevice>
 
@@ -52,6 +53,8 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     do {
         s = parseStep();
     } while(s && !_parseComplete);
+
+    qDebug() << "Found" << _traceSteps.size() << "steps";
 }
 
 TraceRunner::~TraceRunner() {
@@ -101,6 +104,44 @@ bool TraceRunner::isMatchApplicationAvailable() {
         return true;
     }
     return false;
+}
+
+bool TraceRunner::stepForward() {
+    // Sanity check...
+    Q_ASSERT(isForwardStepAvailable());
+
+    // Apply the changes from the current step, then advance the step position.
+    applyCurrentStepChanges();
+    _currentStep += 1;
+
+    qDebug() << "Stepped forward, current position is " << _currentStep;
+
+    // If parsing is not complete, and the new step position does not exist in
+    // the step vector, parse the next step.
+    if (!_parseComplete && !isForwardStepAvailable()) {
+        qDebug() << "Parsed a new step";
+        return parseStep();
+    }
+
+    // If we are not parsing anything, we can return true.
+    return true;
+}
+
+bool TraceRunner::stepBackward() {
+    // Sanity check...
+    Q_ASSERT(isBackwardStepAvailable());
+
+    // Move current step position backwards, then revert the changes. We have to
+    // move before reverting because the "current step" refers to the step which
+    // will be *applied* if stepForward() is called.
+    _currentStep -= 1;
+    revertCurrentStepChanges();
+
+    qDebug() << "Stepped backwards, current position is " << _currentStep;
+
+    // We are not parsing anything because any time we go backwards, we have
+    // already parsed the steps before the current one.
+    return true;
 }
 
 bool TraceRunner::parseStep() {
@@ -177,6 +218,16 @@ bool TraceRunner::parseStep() {
     // reached this point, there weren't any XML errors.
     _traceSteps.push_back(step);
     return true;
+}
+
+
+void TraceRunner::applyCurrentStepChanges() {
+
+}
+
+
+void TraceRunner::revertCurrentStepChanges() {
+
 }
 
 QString TraceRunner::getXMLError() {

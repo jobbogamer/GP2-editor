@@ -100,6 +100,8 @@ private:
 
 
     bool parseStep();
+    void applyCurrentStepChanges();
+    void revertCurrentStepChanges();
 };
 
 }
