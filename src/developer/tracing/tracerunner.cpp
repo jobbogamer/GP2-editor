@@ -12,8 +12,8 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     _initialised(false),
     _parseComplete(false),
     _traceSteps(),
-    _contextStack(),
-    _tracePosition(-1)
+    _currentStep(-1),
+    _contextStack()
 {
     // Attempt to open the tracefile.
     if (!_tracefile.open(QFile::ReadOnly | QFile::Text)) {
@@ -36,6 +36,11 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     }
     else {
         qDebug() << "TraceRunner expected a <trace> element but got an empty tracefile";
+        return;
+    }
+
+    // Parse the first step in the trace to get started.
+    if (!parseStep()) {
         return;
     }
 
@@ -63,18 +68,38 @@ bool TraceRunner::isInitialised() {
 }
 
 bool TraceRunner::isForwardStepAvailable() {
-    return false;
+    // If we are at the end of the trace step vector, and parsing is complete,
+    // we must be at the end of the trace itself, so forward steps are not
+    // available from here.
+    if (_currentStep >= _traceSteps.size() && _parseComplete) {
+        return false;
+    }
+    return true;
 }
 
 bool TraceRunner::isBackwardStepAvailable() {
-    return false;
+    // If we are at the start of the trace step vector, backwards steps are not
+    // available. Whether or not parsing is complete makes no difference,
+    // because parsing always starts at the beginning.
+    if (_currentStep <= 0) {
+        return false;
+    }
+    return true;
 }
 
 bool TraceRunner::isFindMatchAvailable() {
+    // Find match is only available if the current context is <rule>.
+    if (!_contextStack.empty() && _contextStack.top() == RULE) {
+        return true;
+    }
     return false;
 }
 
 bool TraceRunner::isMatchApplicationAvailable() {
+    // Match application is only availabe if the current context is <match>.
+    if (!_contextStack.empty() && _contextStack.top() == RULE_MATCH) {
+        return true;
+    }
     return false;
 }
 

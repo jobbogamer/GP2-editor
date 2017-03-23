@@ -95,8 +95,9 @@ private:
     bool _initialised;
     bool _parseComplete;
     QVector<TraceStep> _traceSteps;
+    int _currentStep;
     QStack<TraceStepType> _contextStack;
-    int _tracePosition;
+
 
     bool parseStep();
 };
