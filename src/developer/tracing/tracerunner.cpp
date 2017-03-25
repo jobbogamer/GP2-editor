@@ -274,7 +274,7 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
         // element is found, to get the nodes and edges from the rule match.
         step->type = RULE_MATCH;
         tokenType = _xml->readNext();
-        while (tokenType != QXmlStreamReader::EndElement && _xml->name() != "match") {
+        while (! (tokenType == QXmlStreamReader::EndElement && _xml->name() == "match") ) {
             // Stop if an invalid element is reached.
             if (tokenType == QXmlStreamReader::Invalid) { return false; }
 
