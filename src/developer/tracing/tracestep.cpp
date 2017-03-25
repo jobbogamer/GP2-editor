@@ -26,4 +26,20 @@ TraceStepType stepTypeFromXML(QStringRef elementName) {
     else { return UNKNOWN; }
 }
 
+
+GraphChangeType changeTypeFromXML(QStringRef elementName) {
+    if      (elementName == "createEdge")  { return ADD_EDGE; }
+    else if (elementName == "createNode")  { return ADD_NODE; }
+    else if (elementName == "deleteEdge")  { return DELETE_EDGE; }
+    else if (elementName == "deleteNode")  { return DELETE_NODE; }
+    else if (elementName == "relabelEdge") { return RELABEL_EDGE; }
+    else if (elementName == "relabelNode") { return RELABEL_NODE; }
+    else if (elementName == "remarkEdge")  { return REMARK_EDGE; }
+    else if (elementName == "remarkNode")  { return REMARK_NODE; }
+    else if (elementName == "setRoot")     { return SET_ROOT; }
+
+    else { return INVALID; }
+}
+
+
 }

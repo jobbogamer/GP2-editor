@@ -29,7 +29,8 @@ enum GraphChangeType {
     RELABEL_NODE,
     REMARK_EDGE,
     REMARK_NODE,
-    SET_ROOT
+    SET_ROOT,
+    INVALID
 };
 
 struct GraphChange {
@@ -71,6 +72,11 @@ struct TraceStep {
  * Converts from an XML tag name to a TraceStepType enum value.
  */
 TraceStepType stepTypeFromXML(QStringRef elementName);
+
+/**
+ * Converts from an XML tag name to a GraphChangeType enum value.
+ */
+GraphChangeType changeTypeFromXML(QStringRef elementName);
 
 }
 
