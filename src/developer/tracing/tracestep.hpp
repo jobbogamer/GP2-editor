@@ -20,6 +20,7 @@ typedef boost::variant<edge_t, node_t> graph_item_t;
 typedef QPair< QVector<int>, QVector<int> > Morphism;
 
 enum GraphChangeType {
+    MORPHISM,
     ADD_EDGE,
     ADD_NODE,
     DELETE_EDGE,

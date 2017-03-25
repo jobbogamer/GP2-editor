@@ -166,76 +166,11 @@ bool TraceRunner::parseStep() {
 
     // Read the next XML token, then decide what to do based on the token type.
     QXmlStreamReader::TokenType tokenType = _xml->readNext();
-    TraceStepType type;
+    bool success = true;
     switch (tokenType) {
     case QXmlStreamReader::StartElement:
-        // Get the name of the element so we can decide what type of step this is.
-        type = stepTypeFromXML(_xml->name());
-        qDebug() << "Found start element" << _xml->name();
-
-        switch (type) {
-        case RULE_MATCH:
-        {
-            // If the match failed, there is nothing more to parse, since there
-            // will not be a morphism.
-            if (_xml->attributes().value("success") == "false") {
-                step.type = RULE_MATCH_FAILED;
-                qDebug() << "Found a failed rule match";
-                break;
-            }
-
-            // If the match was successful, keep parsing until the </match> end
-            // element is found, to get the nodes and edges from the rule match.
-            step.type = RULE_MATCH;
-            tokenType = _xml->readNext();
-            while (tokenType != QXmlStreamReader::EndElement && _xml->name() != "match") {
-                if (_xml->name() == "node") {
-                    QXmlStreamAttributes attrs = _xml->attributes();
-
-                    // Create a node object to represent the matched node, using
-                    // the id value from the XML. Note that QXmlStreamReader will
-                    // return attributes as a QStringRef, hence .toAscii().constData().
-                    node_t node;
-                    node.id = attrs.value("id").toAscii().constData();
-
-                    // Create a GraphChange struct and push it into the TraceStep's
-                    // change vector.
-                    GraphChange change;
-                    change.existingItem = node;
-                    step.graphChanges.push_back(change);
-                }
-                else if (_xml->name() == "edge") {
-                    QXmlStreamAttributes attrs = _xml->attributes();
-
-                    // Create an edge object to represent the matched edge, using
-                    // the id value from the XML. Note that QXmlStreamReader will
-                    // return attributes as a QStringRef, hence .toAscii().constData().
-                    edge_t edge;
-                    edge.id = attrs.value("id").toAscii().constData();
-
-                    // Create a GraphChange struct and push it into the TraceStep's
-                    // change vector.
-                    GraphChange change;
-                    change.existingItem = edge;
-                    step.graphChanges.push_back(change);
-                }
-
-                tokenType = _xml->readNext();
-            }
-            break;
-        }
-
-        case RULE_APPLICATION:
-        {
-            // TODO: Scoop up all the graph changes.
-            break;
-        }
-
-        default:
-            // If this isn't one of the types above, it's just the start of a
-            // context, so create a simple TraceStep struct.
-            step.type = type;
-        }
+        success = parseStartElement(&step);
+        if (!success) { return false; }
         break;
 
     case QXmlStreamReader::EndElement:
@@ -281,6 +216,89 @@ bool TraceRunner::parseStep() {
     // reached this point, there weren't any XML errors.    
     _traceSteps.push_back(step);
     return true;
+}
+
+
+bool TraceRunner::parseStartElement(TraceStep* step) {
+    // Get the name of the element so we can decide what type of step this is.
+    TraceStepType type = stepTypeFromXML(_xml->name());
+    qDebug() << "Found start element" << _xml->name();
+
+    QXmlStreamReader::TokenType tokenType;
+    switch (type) {
+    case RULE_MATCH:
+        // If the match failed, there is nothing more to parse, since there
+        // will not be a morphism.
+        if (_xml->attributes().value("success") == "false") {
+            step->type = RULE_MATCH_FAILED;
+            qDebug() << "Found a failed rule match";
+            break;
+        }
+
+        // If the match was successful, keep parsing until the </match> end
+        // element is found, to get the nodes and edges from the rule match.
+        step->type = RULE_MATCH;
+        tokenType = _xml->readNext();
+        while (tokenType != QXmlStreamReader::EndElement && _xml->name() != "match") {
+            // Stop if an invalid element is reached.
+            if (tokenType == QXmlStreamReader::Invalid) { return false; }
+
+            // Add a graph change item to the vector. We will use the existingItem
+            // field in GraphChange because it doesn't matter which we use, we just
+            // need to be consistent.
+            if (_xml->name() == "node") {
+                QXmlStreamAttributes attrs = _xml->attributes();
+
+                // Create a node object to represent the matched node, using
+                // the id value from the XML. Note that QXmlStreamReader will
+                // return attributes as a QStringRef, hence .toAscii().constData().
+                node_t node;
+                node.id = attrs.value("id").toAscii().constData();
+
+                // Create a GraphChange struct and push it into the TraceStep's
+                // change vector.
+                GraphChange change;
+                change.existingItem = node;
+                change.type = MORPHISM;
+                step->graphChanges.push_back(change);
+            }
+            else if (_xml->name() == "edge") {
+                QXmlStreamAttributes attrs = _xml->attributes();
+
+                // Create an edge object to represent the matched edge, using
+                // the id value from the XML. Note that QXmlStreamReader will
+                // return attributes as a QStringRef, hence .toAscii().constData().
+                edge_t edge;
+                edge.id = attrs.value("id").toAscii().constData();
+
+                // Create a GraphChange struct and push it into the TraceStep's
+                // change vector.
+                GraphChange change;
+                change.type = MORPHISM;
+                change.existingItem = edge;
+                step->graphChanges.push_back(change);
+            }
+
+            tokenType = _xml->readNext();
+        }
+        break;
+
+    case RULE_APPLICATION:
+        // TODO: Scoop up all the graph changes.
+        break;
+
+    default:
+        // If this isn't one of the types above, it's just the start of a
+        // context, so create a simple TraceStep struct.
+        step->type = type;
+    }
+
+    return true;
+}
+
+
+bool TraceRunner::parseEndElement(TraceStep* step) {
+
 }
 
 
