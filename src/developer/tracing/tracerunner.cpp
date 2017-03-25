@@ -320,7 +320,19 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
         break;
 
     case RULE_APPLICATION:
-        // TODO: Scoop up all the graph changes.
+        step->type = RULE_APPLICATION;
+
+        // Keep parsing until the </apply> end element is found in order to add
+        // all the graph changes to the vector.
+        tokenType = _xml->readNext();
+        while (! (tokenType == QXmlStreamReader::EndElement && _xml->name() == "apply") ) {
+            // Stop if an invalid element is reached.
+            if (tokenType == QXmlStreamReader::Invalid) { return false; }
+
+            // TODO: Add a graph change item to the vector.
+
+            tokenType = _xml->readNext();
+        }
         break;
 
     default:
