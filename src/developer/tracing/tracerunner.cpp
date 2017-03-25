@@ -219,6 +219,10 @@ bool TraceRunner::parseStep() {
 }
 
 
+/**
+ * Parse the current StartElement which _xml has reached. The resulting
+ * TraceStep object will be placed into *step.
+ */
 bool TraceRunner::parseStartElement(TraceStep* step) {
     // Get the name of the element so we can decide what type of step this is.
     TraceStepType type = stepTypeFromXML(_xml->name());
@@ -297,8 +301,12 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
 }
 
 
+/**
+ * Parse the current EndElement which _xml has reached. The resulting
+ * TraceStep object will be placed into *step.
+ */
 bool TraceRunner::parseEndElement(TraceStep* step) {
-
+    return true;
 }
 
 
