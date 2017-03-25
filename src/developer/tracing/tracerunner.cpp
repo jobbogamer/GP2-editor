@@ -239,8 +239,9 @@ bool TraceRunner::parseStep() {
 
     default:
         // We do not care about the other token types because we will never
-        // encounter them.
-        break;
+        // encounter them. We must return early here to avoid adding an invalid
+        // TraceStep object to the list.
+        return true;
     }
 
     // Push the trace step into the vector, and return true, since if we have
