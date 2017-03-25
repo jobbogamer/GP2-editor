@@ -118,8 +118,8 @@ bool TraceRunner::stepForward() {
 
     // If parsing is not complete, and the new step position does not exist in
     // the step vector, parse the next step.
-    if (!_parseComplete && !isForwardStepAvailable()) {
-        qDebug() << "Parsed a new step";
+    if (!_parseComplete && _traceSteps.size() <= _currentStep) {
+        qDebug() << "Parsing a new step";
         return parseStep();
     }
 
