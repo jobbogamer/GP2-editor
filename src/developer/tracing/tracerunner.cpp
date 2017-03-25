@@ -174,10 +174,41 @@ bool TraceRunner::parseStep() {
         break;
 
     case QXmlStreamReader::EndElement:
+    {
         // Get the name of the element so we can decide what type of step this is.
-        step.type = stepTypeFromXML(_xml->name());
-        qDebug() << "Found end element" << _xml->name();
+        QStringRef name = _xml->name();
+
+        // If the end element is a context, we want to add a TraceStep of
+        // type END_CONTEXT. Otherwise, we want to ignore it. This is because
+        // QXmlStreamReader counts tags such as <node /> as an open tag and an
+        // end tag, so we have to ignore any which aren't contexts, because we
+        // didn't open a context for the corresponding start element.
+        if (name == "rule" ||
+            name == "match" ||
+            name == "apply" ||
+            name == "ruleset" ||
+            name == "loop" ||
+            name == "iteration" ||
+            name == "procedure" ||
+            name == "if" ||
+            name == "try" ||
+            name == "condition" ||
+            name == "then" ||
+            name == "else" ||
+            name == "or" ||
+            name == "leftBranch" ||
+            name == "rightBranch")
+        {
+            qDebug() << "Found end of context" << name;
+            step.type = END_CONTEXT;
+        }
+        else {
+            // If this isn't the end of a context, we want to ignore it, and not
+            // add the step to the vector, so just return.
+            return true;
+        }
         break;
+    }
 
     case QXmlStreamReader::EndDocument:
         // We have reached the end of the XML file. We don't want to add any steps
@@ -297,15 +328,6 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
         step->type = type;
     }
 
-    return true;
-}
-
-
-/**
- * Parse the current EndElement which _xml has reached. The resulting
- * TraceStep object will be placed into *step.
- */
-bool TraceRunner::parseEndElement(TraceStep* step) {
     return true;
 }
 

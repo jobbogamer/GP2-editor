@@ -101,7 +101,6 @@ private:
 
     bool parseStep();
     bool parseStartElement(TraceStep* step);
-    bool parseEndElement(TraceStep* step);
     void applyCurrentStepChanges();
     void revertCurrentStepChanges();
 };
