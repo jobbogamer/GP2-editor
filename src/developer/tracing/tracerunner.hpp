@@ -98,9 +98,14 @@ private:
     int _currentStep;
     QStack<TraceStepType> _contextStack;
 
-
     bool parseStep();
     bool parseStartElement(TraceStep* step);
+    bool parseGraphChange(GraphChange* change);
+
+    label_t parseLabel(QString label, QString mark);
+    edge_t parseEdge(QXmlStreamAttributes xmlAttributes);
+    node_t parseNode(QXmlStreamAttributes xmlAttributes);
+
     void applyCurrentStepChanges();
     void revertCurrentStepChanges();
 };

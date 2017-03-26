@@ -37,6 +37,7 @@ GraphChangeType changeTypeFromXML(QStringRef elementName) {
     else if (elementName == "remarkEdge")  { return REMARK_EDGE; }
     else if (elementName == "remarkNode")  { return REMARK_NODE; }
     else if (elementName == "setRoot")     { return SET_ROOT; }
+    else if (elementName == "removeRoot")  { return REMOVE_ROOT; }
 
     else { return INVALID; }
 }

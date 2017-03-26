@@ -30,6 +30,7 @@ enum GraphChangeType {
     REMARK_EDGE,
     REMARK_NODE,
     SET_ROOT,
+    REMOVE_ROOT,
     INVALID
 };
 

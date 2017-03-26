@@ -6,6 +6,8 @@
 
 namespace Developer {
 
+#define ATTRIBUTE_AS_ASCII(attributes, name) attributes.value(name).toAscii().constData()
+
 TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     _graph(graph),
     _program(program),
@@ -279,6 +281,13 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
             // Stop if an invalid element is reached.
             if (tokenType == QXmlStreamReader::Invalid) { return false; }
 
+            // Only StartElements should be parsed, since each item in a rule match
+            // has on StartElement and one EndElement.
+            if (tokenType != QXmlStreamReader::StartElement) {
+                tokenType = _xml->readNext();
+                continue;
+            }
+
             // Add a graph change item to the vector. We will use the existingItem
             // field in GraphChange because it doesn't matter which we use, we just
             // need to be consistent.
@@ -286,10 +295,9 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
                 QXmlStreamAttributes attrs = _xml->attributes();
 
                 // Create a node object to represent the matched node, using
-                // the id value from the XML. Note that QXmlStreamReader will
-                // return attributes as a QStringRef, hence .toAscii().constData().
+                // the id value from the XML.
                 node_t node;
-                node.id = attrs.value("id").toAscii().constData();
+                node.id = ATTRIBUTE_AS_ASCII(attrs, "id");
 
                 // Create a GraphChange struct and push it into the TraceStep's
                 // change vector.
@@ -302,10 +310,9 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
                 QXmlStreamAttributes attrs = _xml->attributes();
 
                 // Create an edge object to represent the matched edge, using
-                // the id value from the XML. Note that QXmlStreamReader will
-                // return attributes as a QStringRef, hence .toAscii().constData().
+                // the id value from the XML.
                 edge_t edge;
-                edge.id = attrs.value("id").toAscii().constData();
+                edge.id = ATTRIBUTE_AS_ASCII(attrs, "id");
 
                 // Create a GraphChange struct and push it into the TraceStep's
                 // change vector.
@@ -317,6 +324,7 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
 
             tokenType = _xml->readNext();
         }
+        qDebug() << "Found <match> with" << step->graphChanges.size() << "items";
         break;
 
     case RULE_APPLICATION:
@@ -329,10 +337,24 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
             // Stop if an invalid element is reached.
             if (tokenType == QXmlStreamReader::Invalid) { return false; }
 
-            // TODO: Add a graph change item to the vector.
+            // Only StartElements should be parsed, since each item in a rule application
+            // has on StartElement and one EndElement.
+            if (tokenType != QXmlStreamReader::StartElement) {
+                tokenType = _xml->readNext();
+                continue;
+            }
+
+            // Parse the graph change and add it to the vector if parsing was
+            // successful. If not, skip this element.
+            GraphChange change;
+            bool success = parseGraphChange(&change);
+            if (success) {
+                step->graphChanges.push_back(change);
+            }
 
             tokenType = _xml->readNext();
         }
+        qDebug() << "Found <apply> with" << step->graphChanges.size() << "graph changes";
         break;
 
     default:
@@ -342,6 +364,168 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
     }
 
     return true;
+}
+
+
+bool TraceRunner::parseGraphChange(GraphChange *change) {
+    // Determine which type of change this is, then use that to decide
+    // how to parse the element.
+    change->type = changeTypeFromXML(_xml->name());
+
+    QXmlStreamAttributes attrs = _xml->attributes();
+    switch (change->type) {
+    case ADD_EDGE:
+    {
+        // We don't need to set anything in existingItem, but we do need
+        // to record the details of the new edge.
+        change->newItem = parseEdge(attrs);
+        return true;
+    }
+
+    case ADD_NODE:
+    {
+        // We don't need to set anything in existingItem, but we do need
+        // to record the details of the new edge.
+        change->newItem = parseNode(attrs);
+        return true;
+    }
+
+    case DELETE_EDGE:
+    {
+        // We need to record the details of the edge into existingItem so
+        // that it can be recreated if we step backwards.
+        change->existingItem = parseEdge(attrs);
+        return true;
+    }
+
+    case DELETE_NODE:
+    {
+        // We need to record the details of the node into existingItem so
+        // that it can be recreated if we step backwards.
+        change->existingItem = parseNode(attrs);
+        return true;
+    }
+
+    case RELABEL_EDGE:
+    {
+        edge_t oldEdge, newEdge;
+        oldEdge.id = ATTRIBUTE_AS_ASCII(attrs, "id");
+        oldEdge.label = parseLabel(ATTRIBUTE_AS_ASCII(attrs, "old"), "");
+        newEdge.id = oldEdge.id;  // The ID can't have changed
+        newEdge.label = parseLabel(ATTRIBUTE_AS_ASCII(attrs, "new"), "");
+        change->existingItem = oldEdge;
+        change->newItem = newEdge;
+        return true;
+    }
+
+    case RELABEL_NODE:
+    {
+        node_t oldNode, newNode;
+        oldNode.id = ATTRIBUTE_AS_ASCII(attrs, "id");
+        oldNode.label = parseLabel(ATTRIBUTE_AS_ASCII(attrs, "old"), "");
+        newNode.id = oldNode.id;  // The ID can't have changed
+        newNode.label = parseLabel(ATTRIBUTE_AS_ASCII(attrs, "new"), "");
+        change->existingItem = oldNode;
+        change->newItem = newNode;
+        return true;
+    }
+
+    case REMARK_EDGE:
+    {
+        edge_t oldEdge, newEdge;
+        oldEdge.id = ATTRIBUTE_AS_ASCII(attrs, "id");
+        oldEdge.label = parseLabel("", ATTRIBUTE_AS_ASCII(attrs, "old"));
+        newEdge.id = oldEdge.id;  // The ID can't have changed
+        newEdge.label = parseLabel("", ATTRIBUTE_AS_ASCII(attrs, "new"));
+        change->existingItem = oldEdge;
+        change->newItem = newEdge;
+        return true;
+    }
+
+    case REMARK_NODE:
+    {
+        node_t oldNode, newNode;
+        oldNode.id = ATTRIBUTE_AS_ASCII(attrs, "id");
+        oldNode.label = parseLabel("", ATTRIBUTE_AS_ASCII(attrs, "old"));
+        newNode.id = oldNode.id;  // The ID can't have changed
+        newNode.label = parseLabel("", ATTRIBUTE_AS_ASCII(attrs, "new"));
+        change->existingItem = oldNode;
+        change->newItem = newNode;
+        return true;
+    }
+
+    case SET_ROOT:
+    {
+        node_t oldNode, newNode;
+        oldNode.id = ATTRIBUTE_AS_ASCII(attrs, "id");
+        oldNode.isRoot = false;
+        newNode.id = oldNode.id;
+        newNode.isRoot = true;
+        change->existingItem = oldNode;
+        change->newItem = newNode;
+        return true;
+    }
+
+    case REMOVE_ROOT:
+    {
+        node_t oldNode, newNode;
+        oldNode.id = ATTRIBUTE_AS_ASCII(attrs, "id");
+        oldNode.isRoot = true;
+        newNode.id = oldNode.id;
+        newNode.isRoot = false;
+        change->existingItem = oldNode;
+        change->newItem = newNode;
+        return true;
+    }
+
+    default:
+        // This isn't one of the recognised change types.
+        return false;
+    }
+}
+
+
+edge_t TraceRunner::parseEdge(QXmlStreamAttributes xmlAttributes) {
+    edge_t edge;
+    edge.id    = ATTRIBUTE_AS_ASCII(xmlAttributes, "id");
+    edge.from  = ATTRIBUTE_AS_ASCII(xmlAttributes, "source");
+    edge.to    = ATTRIBUTE_AS_ASCII(xmlAttributes, "target");
+    edge.label = parseLabel(ATTRIBUTE_AS_ASCII(xmlAttributes, "label"),
+                            ATTRIBUTE_AS_ASCII(xmlAttributes, "mark"));
+    return edge;
+}
+
+
+node_t TraceRunner::parseNode(QXmlStreamAttributes xmlAttributes) {
+    node_t node;
+    node.id     = ATTRIBUTE_AS_ASCII(xmlAttributes, "id");
+    node.isRoot = (ATTRIBUTE_AS_ASCII(xmlAttributes, "root") == "true");
+    node.label  = parseLabel(ATTRIBUTE_AS_ASCII(xmlAttributes, "label"),
+                             ATTRIBUTE_AS_ASCII(xmlAttributes, "mark"));
+    return node;
+}
+
+
+label_t TraceRunner::parseLabel(QString label, QString mark) {
+    label_t result;
+
+    // Parse the mark -- this will be a number but we need to convert it into
+    // a string (none, red, green, blue, grey, dashed).
+    if      (mark == "1") { result.mark = "red";    }
+    else if (mark == "2") { result.mark = "green";  }
+    else if (mark == "3") { result.mark = "blue";   }
+    else if (mark == "4") { result.mark = "dashed"; }
+    else                  { result.mark = "none"; }
+
+    // Now parse the label itself. This will be a string containing one or
+    // more atoms separated by : symbols.
+    QStringList items = label.split(":");
+    for (QList<QString>::iterator iter = items.begin(); iter != items.end(); iter++) {
+        atom_t atom = (*iter).toStdString();
+        result.values.push_back(atom);
+    }
+
+    return result;
 }
 
 
