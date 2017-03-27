@@ -148,9 +148,39 @@ bool TraceRunner::stepBackward() {
     qDebug() << "Stepped backwards, current position is " << _currentStep;
 
     // We are not parsing anything because any time we go backwards, we have
-    // already parsed the steps before the current one.
+    // already parsed the steps before the current one. Therefore we will never
+    // encounter an error.
     return true;
 }
+
+
+bool TraceRunner::goToEnd() {
+    // We will simply call stepForward() in a loop until we reach the end of
+    // the trace (or an error occurs). We have to do this because there is no
+    // way to directly jump to the output graph -- whilst a successful program
+    // will have produced a .host file containing the output graph, a program
+    // which ends in failure does not, so we have to step through, applying all
+    // the graph changes one at a time, until we reach the end.
+    bool success = true;
+    while (isForwardStepAvailable() && success) {
+        success = stepForward();
+    }
+    return success;
+}
+
+
+bool TraceRunner::goToStart() {
+    // Since the TraceRunner only has a pointer to the graph, and does not store
+    // the filename of the input graph, we will have to repeatedly step backwards
+    // until we reach the start of the program. If we had the input graph file, we
+    // could just replace _graph and jump directly back to step 0.
+    bool success = true;
+    while (isBackwardStepAvailable() && success) {
+        success = stepBackward();
+    }
+    return success;
+}
+
 
 bool TraceRunner::parseStep() {
     // We always want to parse one step, no matter how much irrelevant XML
@@ -563,7 +593,7 @@ void TraceRunner::revertCurrentStepChanges() {
 
 
 QString TraceRunner::getXMLError() {
-    return QObject::tr("%1\nLine %2, column %3")
+    return QObject::tr("Line %2, column %3: %1")
             .arg(_xml->errorString())
             .arg(_xml->lineNumber())
             .arg(_xml->columnNumber());

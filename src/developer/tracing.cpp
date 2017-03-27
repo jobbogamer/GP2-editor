@@ -68,12 +68,18 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
 }
 
 void Tracing::goToStart() {
-    qDebug() << "goToStart()";
+    // Assuming the button is only enabled if it's possible to jump to the
+    // start (i.e. we are not already at the start).
+    bool success = _traceRunner->goToStart();
+   if (!success) { showXMLError(); }
     updateButtons();
 }
 
 void Tracing::goToEnd() {
-    qDebug() << "goToEnd()";
+    // Assuming the button is only enabled if it's possible to jump to the
+    // end (i.e. we are not already at the end).
+    bool success = _traceRunner->goToEnd();
+    if (!success) { showXMLError(); }
     updateButtons();
 }
 

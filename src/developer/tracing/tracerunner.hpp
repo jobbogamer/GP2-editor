@@ -73,6 +73,20 @@ public:
     bool stepBackward();
 
     /**
+     * Jump ahead to the end of the trace, updating the graph to be the output
+     * graph from the program.
+     * Returns true if the jump is successful, or false if an error occurs.
+     */
+    bool goToEnd();
+
+    /**
+     * Jump back to the start of the trace, reverting the graph to the input
+     * graph from the program.
+     * Returns true if the jump is successful, or false if an error occurs.
+     */
+    bool goToStart();
+
+    /**
      * Returns the match morphism for the current rule, if there is one. Since a
      * morphism can be empty but still be valid, this method returns an optional,
      * which will be boost::none if the rule did not have a valid match.
