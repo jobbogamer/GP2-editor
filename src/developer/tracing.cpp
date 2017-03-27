@@ -80,28 +80,14 @@ void Tracing::goToEnd() {
 void Tracing::stepBack() {
     // Assuming the button is only enabled if a backwards step is available.
     bool success = _traceRunner->stepBackward();
-    if (!success) {
-        qDebug() << _traceRunner->getXMLError();
-        QMessageBox::warning(
-            this,
-            tr("Tracing Error"),
-            tr("The tracefile is malformed. See the log for details.")
-        );
-    }
+    if (!success) { showXMLError(); }
     updateButtons();
 }
 
 void Tracing::stepForward() {
     // Assuming the button is only enabled if a forward step is available.
     bool success = _traceRunner->stepForward();
-    if (!success) {
-        qDebug() << _traceRunner->getXMLError();
-        QMessageBox::warning(
-            this,
-            tr("Tracing Error"),
-            tr("The tracefile is malformed. See the log for details.")
-        );
-    }
+    if (!success) { showXMLError(); }
     updateButtons();
 }
 
@@ -153,6 +139,18 @@ void Tracing::updateButtons() {
         this->connect(_ui->matchButton, SIGNAL(clicked()), SLOT(findMatch()));
         _ui->matchButton->setEnabled(_traceRunner->isFindMatchAvailable());
     }
+}
+
+/**
+ * Show a dialog box explaining that an XML error occurred.
+ */
+void Tracing::showXMLError() {
+    qDebug() << "XML error in tracefile:" << _traceRunner->getXMLError();
+    QMessageBox::warning(
+        this,
+        tr("Tracing Error"),
+        tr("An error occurred when reading the tracefile. See the log for details.")
+    );
 }
 
 }

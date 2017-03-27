@@ -44,6 +44,7 @@ private:
     TraceRunner* _traceRunner;
 
     void updateButtons();
+    void showXMLError();
 };
 
 }
