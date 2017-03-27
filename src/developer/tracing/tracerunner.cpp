@@ -43,20 +43,23 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     }
 
     // Parse the first step in the trace to get started.
-    if (!parseStep()) {
-        return;
-    }
+    bool success = parseStep();
+    if (!success) { return; }
 
     // If we reach this point, we have successfully opened the tracefile,
     // initialised the XML reader, and found the root <trace> element.
+    _currentStep = 0;
     _initialised = true;
 
     bool s = true;
+    int c = 1;
     do {
         s = parseStep();
+        c++;
     } while(s && !_parseComplete);
 
     qDebug() << "Found" << _traceSteps.size() << "steps";
+    qDebug() << "Required" << c << "calls to parseStep";
 }
 
 TraceRunner::~TraceRunner() {
@@ -122,7 +125,10 @@ bool TraceRunner::stepForward() {
     // the step vector, parse the next step.
     if (!_parseComplete && _traceSteps.size() <= _currentStep) {
         qDebug() << "Parsing a new step";
-        return parseStep();
+        bool success = parseStep();
+        if (!success) {
+            return false;
+        }
     }
 
     // If we are not parsing anything, we can return true.
@@ -147,109 +153,115 @@ bool TraceRunner::stepBackward() {
 }
 
 bool TraceRunner::parseStep() {
-    // As parsing continues, this TraceStep object will be updated to reflect
-    // the parsed step. It will be pushed into the steps vector at the end of
-    // this method.
-    TraceStep step;
+    // We always want to parse one step, no matter how much irrelevant XML
+    // text comes before it, so we loop round until a step is traced or an
+    // error occurs.
+    while (true) {
 
-    if (_xml->atEnd()) {
-        // If we have reached the end of the tracefile, there is no more parsing
-        // to do. Mark parsing as complete and return true, since the end of the
-        // file is not an error.
-        _parseComplete = true;
-        return true;
-    }
+        // As parsing continues, this TraceStep object will be updated to reflect
+        // the parsed step. It will be pushed into the steps vector at the end of
+        // this method.
+        TraceStep step;
 
-    if (_xml->hasError()) {
-        // All we can do here is return false. The caller will have to use the
-        // getXMLError() method to get the details.
-        return false;
-    }
-
-    // Read the next XML token, then decide what to do based on the token type.
-    QXmlStreamReader::TokenType tokenType = _xml->readNext();
-    bool success = true;
-    switch (tokenType) {
-    case QXmlStreamReader::StartElement:
-        success = parseStartElement(&step);
-        if (!success) { return false; }
-        break;
-
-    case QXmlStreamReader::EndElement:
-    {
-        // Get the name of the element so we can decide what type of step this is.
-        QStringRef name = _xml->name();
-
-        // If the end element is a context, we want to add a TraceStep of
-        // type END_CONTEXT. Otherwise, we want to ignore it. This is because
-        // QXmlStreamReader counts tags such as <node /> as an open tag and an
-        // end tag, so we have to ignore any which aren't contexts, because we
-        // didn't open a context for the corresponding start element.
-        if (name == "rule" ||
-            name == "match" ||
-            name == "apply" ||
-            name == "ruleset" ||
-            name == "loop" ||
-            name == "iteration" ||
-            name == "procedure" ||
-            name == "if" ||
-            name == "try" ||
-            name == "condition" ||
-            name == "then" ||
-            name == "else" ||
-            name == "or" ||
-            name == "leftBranch" ||
-            name == "rightBranch")
-        {
-            qDebug() << "Found end of context" << name;
-            step.type = END_CONTEXT;
-        }
-        else {
-            // If this isn't the end of a context, we want to ignore it, and not
-            // add the step to the vector, so just return.
-            return true;
-        }
-        break;
-    }
-
-    case QXmlStreamReader::EndDocument:
-        // We have reached the end of the XML file. We don't want to add any steps
-        // to the vector, because this doesn't count as a step, so we'll return
-        // early here.
-        qDebug() << "Found end of document";
-        _parseComplete = true;
-        return true;
-
-    case QXmlStreamReader::Invalid:
-        // A parse error has occurred. We will check the type of error here. If it
-        // is PrematureEndOfDocumentError, we will absorb the error and mark the
-        // parse as complete; this error will occur if a nonterminating program has
-        // been traced and killed with ^C.
-        if (_xml->error() == QXmlStreamReader::PrematureEndOfDocumentError) {
+        if (_xml->atEnd()) {
+            // If we have reached the end of the tracefile, there is no more parsing
+            // to do. Mark parsing as complete and return true, since the end of the
+            // file is not an error.
             _parseComplete = true;
-            // We don't want to push a trace step for an invalid element, so return
-            // early here. We're returning true because we're not classing this as
-            // an error.
-            qDebug() << "PrematureEndOfDocument";
             return true;
         }
-        else {
-            // This was some other kind of parse error, so we need to return false.
-            qDebug() << "ERROR!!!!";
+
+        if (_xml->hasError()) {
+            // All we can do here is return false. The caller will have to use the
+            // getXMLError() method to get the details.
             return false;
         }
 
-    default:
-        // We do not care about the other token types because we will never
-        // encounter them. We must return early here to avoid adding an invalid
-        // TraceStep object to the list.
+        // Read the next XML token, then decide what to do based on the token type.
+        QXmlStreamReader::TokenType tokenType = _xml->readNext();
+        bool success = true;
+        switch (tokenType) {
+        case QXmlStreamReader::StartElement:
+            success = parseStartElement(&step);
+            if (!success) { return false; }
+            break;
+
+        case QXmlStreamReader::EndElement:
+        {
+            // Get the name of the element so we can decide what type of step this is.
+            QStringRef name = _xml->name();
+
+            // If the end element is a context, we want to add a TraceStep of
+            // type END_CONTEXT. Otherwise, we want to ignore it. This is because
+            // QXmlStreamReader counts tags such as <node /> as an open tag and an
+            // end tag, so we have to ignore any which aren't contexts, because we
+            // didn't open a context for the corresponding start element.
+            if (name == "rule" ||
+                name == "match" ||
+                name == "apply" ||
+                name == "ruleset" ||
+                name == "loop" ||
+                name == "iteration" ||
+                name == "procedure" ||
+                name == "if" ||
+                name == "try" ||
+                name == "condition" ||
+                name == "then" ||
+                name == "else" ||
+                name == "or" ||
+                name == "leftBranch" ||
+                name == "rightBranch")
+            {
+                qDebug() << "Found end of context" << name;
+                step.type = END_CONTEXT;
+            }
+            else {
+                // If this isn't the end of a context, we want to ignore it, and not
+                // add the step to the vector, so go back to the start of the loop
+                // to try parsing the next element.
+                continue;
+            }
+            break;
+        }
+
+        case QXmlStreamReader::EndDocument:
+            // We have reached the end of the XML file. We don't want to add any steps
+            // to the vector, because this doesn't count as a step, so we'll return
+            // early here.
+            qDebug() << "Found end of document";
+            _parseComplete = true;
+            return true;
+
+        case QXmlStreamReader::Invalid:
+            // A parse error has occurred. We will check the type of error here. If it
+            // is PrematureEndOfDocumentError, we will absorb the error and mark the
+            // parse as complete; this error will occur if a nonterminating program has
+            // been traced and killed with ^C.
+            if (_xml->error() == QXmlStreamReader::PrematureEndOfDocumentError) {
+                _parseComplete = true;
+                // We don't want to push a trace step for an invalid element, so return
+                // early here. We're returning true because we're not classing this as
+                // an error.
+                qDebug() << "Tracefile is incomplete; parsing will end here";
+                return true;
+            }
+            else {
+                // This was some other kind of parse error, so we need to return false.
+                return false;
+            }
+
+        default:
+            // We do not care about the other token types because we will never
+            // encounter them. We will jump back to the top of the loop to try
+            // parsing the next token.
+            continue;
+        }
+
+        // Push the trace step into the vector, and return true, since if we have
+        // reached this point, there weren't any XML errors.
+        _traceSteps.push_back(step);
         return true;
     }
-
-    // Push the trace step into the vector, and return true, since if we have
-    // reached this point, there weren't any XML errors.    
-    _traceSteps.push_back(step);
-    return true;
 }
 
 
