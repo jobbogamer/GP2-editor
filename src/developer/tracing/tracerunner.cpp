@@ -157,7 +157,6 @@ bool TraceRunner::parseStep() {
     // text comes before it, so we loop round until a step is traced or an
     // error occurs.
     while (true) {
-
         // As parsing continues, this TraceStep object will be updated to reflect
         // the parsed step. It will be pushed into the steps vector at the end of
         // this method.
@@ -541,6 +540,18 @@ label_t TraceRunner::parseLabel(QString label, QString mark) {
 }
 
 
+void TraceRunner::enterContext(TraceStepType context) {
+    _contextStack.push(context);
+    // TODO: Update the program positon
+}
+
+
+void TraceRunner::exitContext() {
+    // TraceStepType context = _contextStack.pop();
+    // TODO: Update the program position
+}
+
+
 void TraceRunner::applyCurrentStepChanges() {
 
 }
@@ -549,6 +560,7 @@ void TraceRunner::applyCurrentStepChanges() {
 void TraceRunner::revertCurrentStepChanges() {
 
 }
+
 
 QString TraceRunner::getXMLError() {
     return QObject::tr("%1\nLine %2, column %3")
