@@ -79,13 +79,29 @@ void Tracing::goToEnd() {
 
 void Tracing::stepBack() {
     // Assuming the button is only enabled if a backwards step is available.
-    _traceRunner->stepBackward();
+    bool success = _traceRunner->stepBackward();
+    if (!success) {
+        qDebug() << _traceRunner->getXMLError();
+        QMessageBox::warning(
+            this,
+            tr("Tracing Error"),
+            tr("The tracefile is malformed. See the log for details.")
+        );
+    }
     updateButtons();
 }
 
 void Tracing::stepForward() {
     // Assuming the button is only enabled if a forward step is available.
-    _traceRunner->stepForward();
+    bool success = _traceRunner->stepForward();
+    if (!success) {
+        qDebug() << _traceRunner->getXMLError();
+        QMessageBox::warning(
+            this,
+            tr("Tracing Error"),
+            tr("The tracefile is malformed. See the log for details.")
+        );
+    }
     updateButtons();
 }
 
