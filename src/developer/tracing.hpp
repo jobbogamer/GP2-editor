@@ -42,6 +42,8 @@ signals:
 private:
     Ui::Tracing* _ui;
     TraceRunner* _traceRunner;
+    Graph* _graphFile;
+    Program* _programFile;
 
     void updateButtons();
     void showXMLError();

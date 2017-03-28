@@ -17,6 +17,8 @@ Tracing::Tracing(QWidget *parent) :
 Tracing::~Tracing()
 {
     delete _ui;
+    if (_graphFile) { delete _graphFile; }
+    if (_programFile) { delete _programFile; }
 }
 
 /**
@@ -42,9 +44,23 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
      * This will overwrite any ongoing trace, but if the user has re-run
      * the program, they probably want to start from the beginning anyway. */
     if (_traceRunner) { delete _traceRunner; }
+
+    /* We need to update the graph and program filenames to use the copies
+     * created for tracing, so that changes don't get written to the orignal
+     * files. (e.g. Graph::AddNode() writes the new node to the actual .host
+     * file, which would mean the input graph itself is being modified while
+     * the trace is being executed.) */
+    Graph* originalGraph = project->graph(runConfig->graph());
+    QString graphPath = originalGraph->absolutePath().replace(".host", "_tracing.host");
+    _graphFile = new Graph(graphPath);
+
+    Program* originalProgram = project->program(runConfig->program());
+    QString programPath = originalGraph->absolutePath().replace(".gp2", "_tracing.gp2");
+    _programFile = new Program(programPath);
+
     _traceRunner = new TraceRunner(tracefileLocation,
-                                   project->graph(runConfig->graph()),
-                                   project->program(runConfig->program()));
+                                   _graphFile,
+                                   _programFile);
 
     if (!_traceRunner->isInitialised()) {
         QMessageBox::warning(

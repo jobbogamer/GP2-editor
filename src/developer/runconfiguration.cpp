@@ -310,10 +310,10 @@ void RunConfiguration::runConfiguration()
     // that the user can edit the originals but still be able to step through
     // the trace.
     if (_config->hasProgramTracing()) {
-        QString programPath = prog->absolutePath().replace(".gp2", "_trace.gp2");
+        QString programPath = prog->absolutePath().replace(".gp2", "_tracing.gp2");
         QFile::copy(prog->absolutePath(), programPath);
 
-        QString graphPath = graph->absolutePath().replace(".host", "_trace.host");
+        QString graphPath = graph->absolutePath().replace(".host", "_tracing.host");
         QFile::copy(graph->absolutePath(), graphPath);
     }
 
