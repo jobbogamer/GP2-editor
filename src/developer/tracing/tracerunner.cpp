@@ -653,7 +653,67 @@ void TraceRunner::applyCurrentStepChanges() {
 /** Revert all the changes from the current TraceStep. This means that the current
  * step must be a rule application. */
 void TraceRunner::revertCurrentStepChanges() {
+    // Sanity check. The way parsing works means this should never fail, but it's
+    // better to make sure.
+    Q_ASSERT(_currentStep >= 0 && _currentStep < _traceSteps.size());
 
+    // Check that this is actually a rule application.
+    TraceStep step = _traceSteps.at(_currentStep);
+    if (step.type != RULE_APPLICATION) { return; }
+
+    // Iterate over the graph changes, applying each one in turn. Note that we
+    // must iterate *backwards*, because (for example) we cannot delete a node
+    // if an edge was added after the node was added, so changes have to be
+    // undone in reverse.
+    // Qt 4.8 doesn't have QVector::rbegin() and rend() so we have to use a while
+    // loop to iterate backwards.
+    QVector<GraphChange>::Iterator change = step.graphChanges.end();
+    while (change != step.graphChanges.begin())
+    {
+        // Decrement iterator at the beginning because .end() is the element "after"
+        // the last element in the vector.
+        change--;
+
+        switch (change->type) {
+        case ADD_EDGE:
+        {
+            edge_t createdEdge = boost::get<edge_t>(change->newItem);
+            _graph->removeEdge(QSTRING(createdEdge.id));
+            break;
+        }
+
+        case ADD_NODE:
+            break;
+
+        case DELETE_EDGE:
+            break;
+
+        case DELETE_NODE:
+            break;
+
+        case RELABEL_EDGE:
+            break;
+
+        case RELABEL_NODE:
+            break;
+
+        case REMARK_EDGE:
+            break;
+
+        case REMARK_NODE:
+            break;
+
+        case SET_ROOT:
+            break;
+
+        case REMOVE_ROOT:
+            break;
+
+        default:
+            // This is an invalid change type.
+            continue;
+        }
+    }
 }
 
 
