@@ -45,7 +45,7 @@ private:
     Graph* _graphFile;
     Program* _programFile;
 
-    void updateButtons();
+    void updateUI();
     void showXMLError();
 };
 

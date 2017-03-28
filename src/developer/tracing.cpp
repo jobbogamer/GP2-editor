@@ -71,12 +71,7 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
         return;
     }
 
-    updateButtons();
-
-    /* Load the graph into the graph view. Note that since this is just a
-    pointer to the graph, any changes made to the graph will automatically
-    be reflected in the graph view. */
-    _ui->graphView->setGraph(_traceRunner->graph());
+    updateUI();
 
     // We can now signal that tracing is ready, because we have everything
     // we need to show the tracing tab.
@@ -88,7 +83,7 @@ void Tracing::goToStart() {
     // start (i.e. we are not already at the start).
     bool success = _traceRunner->goToStart();
    if (!success) { showXMLError(); }
-    updateButtons();
+    updateUI();
 }
 
 void Tracing::goToEnd() {
@@ -96,39 +91,38 @@ void Tracing::goToEnd() {
     // end (i.e. we are not already at the end).
     bool success = _traceRunner->goToEnd();
     if (!success) { showXMLError(); }
-    updateButtons();
+    updateUI();
 }
 
 void Tracing::stepBack() {
     // Assuming the button is only enabled if a backwards step is available.
     bool success = _traceRunner->stepBackward();
     if (!success) { showXMLError(); }
-    updateButtons();
+    updateUI();
 }
 
 void Tracing::stepForward() {
     // Assuming the button is only enabled if a forward step is available.
     bool success = _traceRunner->stepForward();
     if (!success) { showXMLError(); }
-    updateButtons();
-    _ui->graphView->setGraph(_traceRunner->graph());
+    updateUI();
 }
 
 void Tracing::findMatch() {
     qDebug() << "findMatch()";
-    updateButtons();
+    updateUI();
 }
 
 void Tracing::applyMatch() {
     qDebug() << "applyMatch()";
-    updateButtons();
+    updateUI();
 }
 
 /**
  * Updates the enabled/disabled state of the control strip buttons based on the
- * state of the TraceRunner.
+ * state of the TraceRunner, and updates the graph view.
  */
-void Tracing::updateButtons() {
+void Tracing::updateUI() {
     // If backwards steps are not available, we must be at the start of the
     // trace, so there's no point jumping to the start or stepping backwards.
     bool backAvailable = _traceRunner->isBackwardStepAvailable();
@@ -162,6 +156,9 @@ void Tracing::updateButtons() {
         this->connect(_ui->matchButton, SIGNAL(clicked()), SLOT(findMatch()));
         _ui->matchButton->setEnabled(_traceRunner->isFindMatchAvailable());
     }
+
+    // Update the graph view.
+    _ui->graphView->setGraph(_traceRunner->graph());
 }
 
 /**
