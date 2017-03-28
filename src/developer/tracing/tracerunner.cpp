@@ -3,10 +3,13 @@
 #include <QtGlobal>
 #include <QDebug>
 #include <QIODevice>
+#include "translate/translate.hpp"
 
 namespace Developer {
 
 #define ATTRIBUTE_AS_ASCII(attributes, name) attributes.value(name).toAscii().constData()
+
+#define QSTRING(string) QString::fromStdString(string)
 
 TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     _graph(graph),
@@ -500,7 +503,7 @@ bool TraceRunner::parseGraphChange(GraphChange *change) {
         node_t oldNode, newNode;
         oldNode.id = ATTRIBUTE_AS_ASCII(attrs, "id");
         oldNode.isRoot = false;
-        newNode.id = oldNode.id;
+        newNode.id = oldNode.id; // The ID can't have changed
         newNode.isRoot = true;
         change->existingItem = oldNode;
         change->newItem = newNode;
@@ -512,7 +515,7 @@ bool TraceRunner::parseGraphChange(GraphChange *change) {
         node_t oldNode, newNode;
         oldNode.id = ATTRIBUTE_AS_ASCII(attrs, "id");
         oldNode.isRoot = true;
-        newNode.id = oldNode.id;
+        newNode.id = oldNode.id; // The ID can't have changed
         newNode.isRoot = false;
         change->existingItem = oldNode;
         change->newItem = newNode;
@@ -582,11 +585,73 @@ void TraceRunner::exitContext() {
 }
 
 
+/**
+ * Apply all the GraphChanges in the current TraceStep. This means that the current
+ * step must be a rule application.
+ */
 void TraceRunner::applyCurrentStepChanges() {
+    // Sanity check. The way parsing works means this should never fail, but it's
+    // better to make sure.
+    Q_ASSERT(_currentStep >= 0 && _currentStep < _traceSteps.size());
 
+    // Check that this is actually a rule application.
+    TraceStep step = _traceSteps.at(_currentStep);
+    if (step.type != RULE_APPLICATION) { return; }
+
+    // Iterate over the graph changes, applying each one in turn.
+    for (QVector<GraphChange>::Iterator change = step.graphChanges.begin();
+         change != step.graphChanges.end();
+         change++)
+    {
+        switch (change->type) {
+        case ADD_EDGE:
+        {
+            edge_t newEdge = boost::get<edge_t>(change->newItem);
+            _graph->addEdge(QSTRING(newEdge.id),
+                            _graph->node(QSTRING(newEdge.from)),
+                            _graph->node(QSTRING(newEdge.to)),
+                            QSTRING(ListToString(newEdge.label.values)),
+                            QSTRING(newEdge.label.mark));
+            break;
+        }
+
+        case ADD_NODE:
+            break;
+
+        case DELETE_EDGE:
+            break;
+
+        case DELETE_NODE:
+            break;
+
+        case RELABEL_EDGE:
+            break;
+
+        case RELABEL_NODE:
+            break;
+
+        case REMARK_EDGE:
+            break;
+
+        case REMARK_NODE:
+            break;
+
+        case SET_ROOT:
+            break;
+
+        case REMOVE_ROOT:
+            break;
+
+        default:
+            // This is an invalid change type.
+            continue;
+        }
+    }
 }
 
 
+/** Revert all the changes from the current TraceStep. This means that the current
+ * step must be a rule application. */
 void TraceRunner::revertCurrentStepChanges() {
 
 }

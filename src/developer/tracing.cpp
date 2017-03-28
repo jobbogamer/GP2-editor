@@ -95,6 +95,7 @@ void Tracing::stepForward() {
     bool success = _traceRunner->stepForward();
     if (!success) { showXMLError(); }
     updateButtons();
+    _ui->graphView->setGraph(_traceRunner->graph());
 }
 
 void Tracing::findMatch() {
