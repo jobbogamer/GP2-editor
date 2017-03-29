@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
     a.setOrganizationName("UoYCS");
     a.setOrganizationDomain("www.cs.york.ac.uk");
     a.setApplicationName("GP Developer");
+    a.setWindowIcon(QIcon(QPixmap(":/icons/application-icon.png")));
 
     qDebug () << "Starting application.";
 
