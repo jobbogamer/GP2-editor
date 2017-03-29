@@ -323,7 +323,11 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
         tokenType = _xml->readNext();
         while (! (tokenType == QXmlStreamReader::EndElement && _xml->name() == "match") ) {
             // Stop if an invalid element is reached.
-            if (tokenType == QXmlStreamReader::Invalid) { return false; }
+            if (tokenType == QXmlStreamReader::Invalid) {
+                qDebug() << "Found invalid XML token at line" << _xml->lineNumber() << ", column" << _xml->columnNumber();
+                qDebug() << _xml->tokenString();
+                return false;
+            }
 
             // Only StartElements should be parsed, since each item in a rule match
             // has on StartElement and one EndElement.
@@ -379,7 +383,11 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
         tokenType = _xml->readNext();
         while (! (tokenType == QXmlStreamReader::EndElement && _xml->name() == "apply") ) {
             // Stop if an invalid element is reached.
-            if (tokenType == QXmlStreamReader::Invalid) { return false; }
+            if (tokenType == QXmlStreamReader::Invalid) {
+                qDebug() << "Found invalid XML token at line" << _xml->lineNumber() << ", column" << _xml->columnNumber();
+                qDebug() << _xml->tokenString();
+                return false;
+            }
 
             // Only StartElements should be parsed, since each item in a rule application
             // has on StartElement and one EndElement.
@@ -400,6 +408,12 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
         }
         qDebug() << "Found <apply> with" << step->graphChanges.size() << "graph changes";
         break;
+
+    case UNKNOWN:
+        qDebug() << "Unknown XML element type found at line"
+                 << _xml->lineNumber() << ", column" << _xml->columnNumber()
+                 << ":" << _xml->name();
+        return false;
 
     default:
         // If this isn't one of the types above, it's just the start of a
