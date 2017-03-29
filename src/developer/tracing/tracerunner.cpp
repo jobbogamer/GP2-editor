@@ -630,7 +630,14 @@ void TraceRunner::applyCurrentStepChanges() {
         }
 
         case ADD_NODE:
+        {
+            node_t newNode = boost::get<node_t>(change->newItem);
+            _graph->addNode(QSTRING(newNode.id),
+                            QSTRING(ListToString(newNode.label.values)),
+                            QSTRING(newNode.label.mark),
+                            newNode.isRoot);
             break;
+        }
 
         case DELETE_EDGE:
             break;
@@ -697,7 +704,11 @@ void TraceRunner::revertCurrentStepChanges() {
         }
 
         case ADD_NODE:
+        {
+            node_t createdNode = boost::get<node_t>(change->newItem);
+            _graph->removeNode(QSTRING(createdNode.id));
             break;
+        }
 
         case DELETE_EDGE:
             break;
