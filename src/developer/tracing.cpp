@@ -9,7 +9,9 @@ namespace Developer {
 Tracing::Tracing(QWidget *parent) :
     QWidget(parent),
     _ui(new Ui::Tracing),
-    _traceRunner(0)
+    _traceRunner(0),
+    _graphFile(0),
+    _programFile(0)
 {
     _ui->setupUi(this);
 }
@@ -55,7 +57,7 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
     _graphFile = new Graph(graphPath);
 
     Program* originalProgram = project->program(runConfig->program());
-    QString programPath = originalGraph->absolutePath().replace(".gp2", "_tracing.gp2");
+    QString programPath = originalProgram->absolutePath().replace(".gp2", "_tracing.gp2");
     _programFile = new Program(programPath);
 
     _traceRunner = new TraceRunner(tracefileLocation,
