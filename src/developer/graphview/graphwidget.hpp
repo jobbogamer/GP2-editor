@@ -7,11 +7,11 @@
 #include <QGraphicsView>
 
 #include "global.hpp"
+#include "graphscene.hpp"
 
 namespace Developer {
 
 class Graph;
-class GraphScene;
 
 /*!
  * \brief Provides a top-level widget for representing a graph visualisation

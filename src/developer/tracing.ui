@@ -17,7 +17,7 @@
    <item>
     <widget class="Developer::GraphWidget" name="graphView">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
     </widget>
    </item>

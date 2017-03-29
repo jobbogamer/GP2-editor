@@ -253,7 +253,9 @@ void GraphScene::setGraph(Graph *newGraph)
 
     resizeToContents();
 
-    _readOnly = (_graph->status() == GPFile::ReadOnly);
+    if (!_readOnly) {
+        _readOnly = (_graph->status() == GPFile::ReadOnly);
+    }
 }
 
 Graph *GraphScene::linkedGraph() const

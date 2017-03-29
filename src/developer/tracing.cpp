@@ -14,6 +14,7 @@ Tracing::Tracing(QWidget *parent) :
     _programFile(0)
 {
     _ui->setupUi(this);
+    _ui->graphView->graphScene()->setReadOnly(true);
 }
 
 Tracing::~Tracing()
