@@ -1087,6 +1087,7 @@ void MainWindow::tracefileAvailable()
     // the tooltip.
     _ui->tabWidget->setTabEnabled("default", 4, true);
     _ui->tabWidget->setTabTooltip("default", 4, "");
+    _ui->tabWidget->update();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
