@@ -599,7 +599,7 @@ void TraceRunner::applyCurrentStepChanges() {
     Q_ASSERT(_currentStep >= 0 && _currentStep < _traceSteps.size());
 
     // Check that this is actually a rule application.
-    TraceStep step = _traceSteps.at(_currentStep);
+    TraceStep& step = _traceSteps[_currentStep];
     if (step.type != RULE_APPLICATION) { return; }
 
     // Iterate over the graph changes, applying each one in turn.
@@ -637,7 +637,20 @@ void TraceRunner::applyCurrentStepChanges() {
         }
 
         case DELETE_NODE:
+        {
+            node_t node = boost::get<node_t>(change->existingItem);
+
+            // Before deleting the node from the graph, store its position on
+            // the canvas so that it can be restored to the same position when
+            // stepping backwards.
+            Node* graphNode = _graph->node(QSTRING(node.id));
+            node.xPos = graphNode->xPos();
+            node.yPos = graphNode->yPos();
+            change->existingItem = node;
+
+            _graph->removeNode(QSTRING(node.id));
             break;
+        }
 
         case RELABEL_EDGE:
             break;
@@ -673,7 +686,7 @@ void TraceRunner::revertCurrentStepChanges() {
     Q_ASSERT(_currentStep >= 0 && _currentStep < _traceSteps.size());
 
     // Check that this is actually a rule application.
-    TraceStep step = _traceSteps.at(_currentStep);
+    TraceStep& step = _traceSteps[_currentStep];
     if (step.type != RULE_APPLICATION) { return; }
 
     // Iterate over the graph changes, applying each one in turn. Note that we
@@ -716,7 +729,16 @@ void TraceRunner::revertCurrentStepChanges() {
         }
 
         case DELETE_NODE:
+        {
+            node_t deletedNode = boost::get<node_t>(change->existingItem);
+            _graph->addNode(QSTRING(deletedNode.id),
+                            QSTRING(ListToString(deletedNode.label.values)),
+                            QSTRING(deletedNode.label.mark),
+                            deletedNode.isRoot,
+                            false,
+                            QPointF(deletedNode.xPos, deletedNode.yPos));
             break;
+        }
 
         case RELABEL_EDGE:
             break;
