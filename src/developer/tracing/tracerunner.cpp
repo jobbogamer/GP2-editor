@@ -640,7 +640,11 @@ void TraceRunner::applyCurrentStepChanges() {
         }
 
         case DELETE_EDGE:
+        {
+            edge_t edge = boost::get<edge_t>(change->existingItem);
+            _graph->removeEdge(QSTRING(edge.id));
             break;
+        }
 
         case DELETE_NODE:
             break;
@@ -711,7 +715,15 @@ void TraceRunner::revertCurrentStepChanges() {
         }
 
         case DELETE_EDGE:
+        {
+            edge_t deletedEdge = boost::get<edge_t>(change->existingItem);
+            _graph->addEdge(QSTRING(deletedEdge.id),
+                            _graph->node(QSTRING(deletedEdge.from)),
+                            _graph->node(QSTRING(deletedEdge.to)),
+                            QSTRING(ListToString(deletedEdge.label.values)),
+                            QSTRING(deletedEdge.label.mark));
             break;
+        }
 
         case DELETE_NODE:
             break;
