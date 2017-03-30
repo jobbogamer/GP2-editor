@@ -53,16 +53,6 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
     // initialised the XML reader, and found the root <trace> element.
     _currentStep = 0;
     _initialised = true;
-
-    bool s = true;
-    int c = 1;
-    do {
-        s = parseStep();
-        c++;
-    } while(s && !_parseComplete);
-
-    qDebug() << "Found" << _traceSteps.size() << "steps";
-    qDebug() << "Required" << c << "calls to parseStep";
 }
 
 TraceRunner::~TraceRunner() {
