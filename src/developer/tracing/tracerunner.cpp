@@ -734,6 +734,7 @@ void TraceRunner::applyCurrentStepChanges() {
 
         default:
             // This is an invalid change type.
+            qDebug() << "Invalid graph change in trace step at position" << _currentStep;
             continue;
         }
     }
@@ -888,6 +889,7 @@ void TraceRunner::revertCurrentStepChanges() {
 
         default:
             // This is an invalid change type.
+            qDebug() << "Invalid graph change in trace step at position" << _currentStep;
             continue;
         }
     }
