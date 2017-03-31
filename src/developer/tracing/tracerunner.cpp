@@ -681,7 +681,18 @@ void TraceRunner::applyCurrentStepChanges() {
         }
 
         case REMARK_EDGE:
+        {
+            edge_t edge = boost::get<edge_t>(change->newItem);
+
+            // Get a pointer to the edge in the graph using its ID, so that its
+            // mark can be updated.
+            Edge* graphEdge = _graph->edge(QSTRING(edge.id));
+
+            // Get the mark from the newItem edge and apply it to the Edge object.
+            graphEdge->setMark(QSTRING(edge.label.mark));
+
             break;
+        }
 
         case REMARK_NODE:
             break;
@@ -793,7 +804,19 @@ void TraceRunner::revertCurrentStepChanges() {
         }
 
         case REMARK_EDGE:
+        {
+            edge_t edge = boost::get<edge_t>(change->existingItem);
+
+            // Get a pointer to the edge in the graph using its ID, so that its
+            // label can be updated.
+            Edge* graphEdge = _graph->edge(QSTRING(edge.id));
+
+            // Get the mark from the existingItem edge (since we are reverting
+            // the mark back to its original value) and apply it to the Edge object.
+            graphEdge->setMark(QSTRING(edge.label.mark));
+
             break;
+        }
 
         case REMARK_NODE:
             break;
