@@ -709,7 +709,16 @@ void TraceRunner::applyCurrentStepChanges() {
         }
 
         case SET_ROOT:
+        {
+            node_t node = boost::get<node_t>(change->newItem);
+
+            // Get a pointer to the node in the graph using its ID, so that it
+            // can be made a root node.
+            Node* graphNode = _graph->node(QSTRING(node.id));
+            graphNode->setIsRoot(true);
+
             break;
+        }
 
         case REMOVE_ROOT:
             break;
@@ -845,7 +854,16 @@ void TraceRunner::revertCurrentStepChanges() {
         }
 
         case SET_ROOT:
+        {
+            node_t node = boost::get<node_t>(change->newItem);
+
+            // Get a pointer to the node in the graph using its ID, so that it
+            // can be reverted to a non-root node.
+            Node* graphNode = _graph->node(QSTRING(node.id));
+            graphNode->setIsRoot(false);
+
             break;
+        }
 
         case REMOVE_ROOT:
             break;
