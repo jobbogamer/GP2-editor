@@ -667,7 +667,18 @@ void TraceRunner::applyCurrentStepChanges() {
         }
 
         case RELABEL_NODE:
+        {
+            node_t node = boost::get<node_t>(change->newItem);
+
+            // Get a pointer to the node in the graph using its ID, so that its
+            // label can be updated.
+            Node* graphNode = _graph->node(QSTRING(node.id));
+
+            // Get the label from the newItem node and apply it to the Node object.
+            graphNode->setLabel(QSTRING(ListToString(node.label.values)));
+
             break;
+        }
 
         case REMARK_EDGE:
             break;
@@ -767,7 +778,19 @@ void TraceRunner::revertCurrentStepChanges() {
         }
 
         case RELABEL_NODE:
+        {
+            node_t node = boost::get<node_t>(change->existingItem);
+
+            // Get a pointer to the node in the graph using its ID, so that its
+            // label can be updated.
+            Node* graphNode = _graph->node(QSTRING(node.id));
+
+            // Get the label from the existingItem node (since we are reverting
+            // the label back to its original value) and apply it to the Node object.
+            graphNode->setLabel(QSTRING(ListToString(node.label.values)));
+
             break;
+        }
 
         case REMARK_EDGE:
             break;
