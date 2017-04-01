@@ -60,13 +60,13 @@ enum TraceStepType {
     SKIP,
     BREAK,
     FAIL,
-    END_CONTEXT,
     UNKNOWN
 };
 
 struct TraceStep {
     TraceStepType type;
     QString contextName;
+    bool endOfContext;
     QVector<GraphChange> graphChanges;
 };
 

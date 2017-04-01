@@ -112,18 +112,15 @@ bool TraceRunner::stepForward() {
     if (step.type == RULE_APPLICATION) {
         applyCurrentStepChanges();
     }
-    else if (step.type == END_CONTEXT) {
+    else if (step.endOfContext) {
         exitContext();
     }
     else {
         enterContext(step);
     }
 
-    // Apply the changes from the current step, then advance the step position.
-    applyCurrentStepChanges();
+    // Move on to the next step.
     _currentStep += 1;
-
-    qDebug() << "Stepped forward, current position is " << _currentStep;
 
     // If parsing is not complete, and the new step position does not exist in
     // the step vector, parse the next step.
@@ -147,9 +144,17 @@ bool TraceRunner::stepBackward() {
     // move before reverting because the "current step" refers to the step which
     // will be *applied* if stepForward() is called.
     _currentStep -= 1;
-    revertCurrentStepChanges();
 
-    qDebug() << "Stepped backwards, current position is " << _currentStep;
+    TraceStep& step = _traceSteps[_currentStep];
+    if (step.type == RULE_APPLICATION) {
+        revertCurrentStepChanges();
+    }
+    else if (step.endOfContext) {
+        enterContext(step, true);
+    }
+    else {
+        exitContext(true);
+    }
 
     // We are not parsing anything because any time we go backwards, we have
     // already parsed the steps before the current one. Therefore we will never
@@ -169,6 +174,7 @@ bool TraceRunner::goToEnd() {
     while (isForwardStepAvailable() && success) {
         success = stepForward();
     }
+
     return success;
 }
 
@@ -182,6 +188,7 @@ bool TraceRunner::goToStart() {
     while (isBackwardStepAvailable() && success) {
         success = stepBackward();
     }
+
     return success;
 }
 
@@ -225,35 +232,22 @@ bool TraceRunner::parseStep() {
             QStringRef name = _xml->name();
 
             // If the end element is a context, we want to add a TraceStep of
-            // type END_CONTEXT. Otherwise, we want to ignore it. This is because
-            // QXmlStreamReader counts tags such as <node /> as an open tag and an
-            // end tag, so we have to ignore any which aren't contexts, because we
-            // didn't open a context for the corresponding start element.
-            if (name == "rule" ||
-                name == "match" ||
-                name == "apply" ||
-                name == "ruleset" ||
-                name == "loop" ||
-                name == "iteration" ||
-                name == "procedure" ||
-                name == "if" ||
-                name == "try" ||
-                name == "condition" ||
-                name == "then" ||
-                name == "else" ||
-                name == "or" ||
-                name == "leftBranch" ||
-                name == "rightBranch")
+            // marking the end of that context. Otherwise, we want to ignore it.
+            // This is because QXmlStreamReader counts tags such as <node /> as
+            // an open tag *and* an end tag, so we have to ignore any which aren't
+            // contexts, because we didn't open a context for the corresponding start element.
+            TraceStepType type = stepTypeFromXML(name);
+            if (type == SKIP  ||
+                type == BREAK ||
+                type == FAIL  ||
+                type == UNKNOWN)
             {
-                qDebug() << "Found end of context" << name;
-                step.type = END_CONTEXT;
-            }
-            else {
-                // If this isn't the end of a context, we want to ignore it, and not
-                // add the step to the vector, so go back to the start of the loop
-                // to try parsing the next element.
                 continue;
             }
+
+            qDebug() << "Found end of context" << name;
+            step.type = type;
+            step.endOfContext = true;
             break;
         }
 
@@ -293,6 +287,17 @@ bool TraceRunner::parseStep() {
         // Push the trace step into the vector, and return true, since if we have
         // reached this point, there weren't any XML errors.
         _traceSteps.push_back(step);
+
+        // If the step we added was a <match> context, we also have to add a
+        // corresponding ending </match> context. This is because the </match> token
+        // was already consumed, so we won't parse it in the next forward step.
+        if (step.type == RULE_MATCH || step.type == RULE_MATCH_FAILED) {
+            TraceStep matchEnd;
+            matchEnd.type = step.type;
+            matchEnd.endOfContext = true;
+            _traceSteps.push_back(matchEnd);
+        }
+
         return true;
     }
 }
@@ -373,7 +378,7 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
 
             tokenType = _xml->readNext();
         }
-        qDebug() << "Found <match> with" << step->graphChanges.size() << "items";
+        qDebug() << "Found <match> with" << step->graphChanges.size() << "items";        
         break;
 
     case RULE_APPLICATION:
@@ -595,19 +600,21 @@ label_t TraceRunner::parseLabel(QString label, QString mark) {
 }
 
 
-void TraceRunner::enterContext(TraceStep& context) {
+void TraceRunner::enterContext(TraceStep& context, bool backwards/*=false*/) {
     _contextStack.push(context.type);
-    qDebug() << "Context stack:" << _contextStack;
+    qDebug() << "Context stack =" << _contextStack;
 
-    // TODO: Update the program positon
+    // TODO: Update the program positon, taking into account whether we
+    // are stepping forwards or backwards.
 }
 
 
-void TraceRunner::exitContext() {
+void TraceRunner::exitContext(bool backwards/*=false*/) {
     _contextStack.pop();
-    qDebug() << "Context stack:" << _contextStack;
+    qDebug() << "Context stack =" << _contextStack;
 
-     // TODO: Update the program position
+    // TODO: Update the program position, taking into account whether we
+    // are stepping forwards or backwards.
 }
 
 
