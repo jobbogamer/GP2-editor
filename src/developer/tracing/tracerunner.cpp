@@ -406,9 +406,16 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
         return false;
 
     default:
-        // If this isn't one of the types above, it's just the start of a
-        // context, so create a simple TraceStep struct.
+        // If this isn't one of the types above, it's the start of a
+        // context.
         step->type = type;
+
+        // If the context has a name, record it in the TraceStep.
+        QXmlStreamAttributes attrs = _xml->attributes();
+        QString nameValue = ATTRIBUTE_AS_ASCII(attrs, "name");
+        if (nameValue.length() > 0) {
+            step->contextName = nameValue;
+        }
     }
 
     return true;

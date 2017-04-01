@@ -66,6 +66,7 @@ enum TraceStepType {
 
 struct TraceStep {
     TraceStepType type;
+    QString contextName;
     QVector<GraphChange> graphChanges;
 };
 
