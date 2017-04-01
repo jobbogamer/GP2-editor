@@ -89,19 +89,15 @@ bool TraceRunner::isBackwardStepAvailable() {
 }
 
 bool TraceRunner::isFindMatchAvailable() {
-    // Find match is only available if the current context is <rule>.
-    if (!_contextStack.empty() && _contextStack.top() == RULE) {
-        return true;
-    }
-    return false;
+    // Find match is only available if the current step type is RULE_MATCH or RULE_MATCH_FAILED.
+    TraceStep& step = _traceSteps[_currentStep];
+    return (step.type == RULE_MATCH || step.type == RULE_MATCH_FAILED);
 }
 
 bool TraceRunner::isMatchApplicationAvailable() {
-    // Match application is only availabe if the current context is <match>.
-    if (!_contextStack.empty() && _contextStack.top() == RULE_MATCH) {
-        return true;
-    }
-    return false;
+    // Match application is only available if the current step type is RULE_APPLICATION.
+    TraceStep& step = _traceSteps[_currentStep];
+    return (step.type == RULE_APPLICATION);
 }
 
 bool TraceRunner::stepForward() {
