@@ -108,6 +108,17 @@ bool TraceRunner::stepForward() {
     // Sanity check...
     Q_ASSERT(isForwardStepAvailable());
 
+    TraceStep& step = _traceSteps[_currentStep];
+    if (step.type == RULE_APPLICATION) {
+        applyCurrentStepChanges();
+    }
+    else if (step.type == END_CONTEXT) {
+        exitContext();
+    }
+    else {
+        enterContext(step);
+    }
+
     // Apply the changes from the current step, then advance the step position.
     applyCurrentStepChanges();
     _currentStep += 1;
@@ -584,15 +595,19 @@ label_t TraceRunner::parseLabel(QString label, QString mark) {
 }
 
 
-void TraceRunner::enterContext(TraceStepType context) {
-    _contextStack.push(context);
+void TraceRunner::enterContext(TraceStep& context) {
+    _contextStack.push(context.type);
+    qDebug() << "Context stack:" << _contextStack;
+
     // TODO: Update the program positon
 }
 
 
 void TraceRunner::exitContext() {
-    // TraceStepType context = _contextStack.pop();
-    // TODO: Update the program position
+    _contextStack.pop();
+    qDebug() << "Context stack:" << _contextStack;
+
+     // TODO: Update the program position
 }
 
 
@@ -605,7 +620,8 @@ void TraceRunner::applyCurrentStepChanges() {
     // better to make sure.
     Q_ASSERT(_currentStep >= 0 && _currentStep < _traceSteps.size());
 
-    // Check that this is actually a rule application.
+    // Check that this is actually a rule application. There cannot be any graph
+    // changes in any other type of step.
     TraceStep& step = _traceSteps[_currentStep];
     if (step.type != RULE_APPLICATION) { return; }
 

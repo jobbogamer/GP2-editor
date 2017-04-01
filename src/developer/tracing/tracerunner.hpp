@@ -120,7 +120,7 @@ private:
     edge_t parseEdge(QXmlStreamAttributes xmlAttributes);
     node_t parseNode(QXmlStreamAttributes xmlAttributes);
 
-    void enterContext(TraceStepType context);
+    void enterContext(TraceStep& context);
     void exitContext();
     void applyCurrentStepChanges();
     void revertCurrentStepChanges();
