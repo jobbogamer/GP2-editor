@@ -72,10 +72,7 @@ bool TraceRunner::isForwardStepAvailable() {
     // If we are at the end of the trace step vector, and parsing is complete,
     // we must be at the end of the trace itself, so forward steps are not
     // available from here.
-    if (_currentStep >= _traceSteps.size() && _parseComplete) {
-        return false;
-    }
-    return true;
+    return (! (_currentStep >= _traceSteps.size() && _parseComplete));
 }
 
 bool TraceRunner::isBackwardStepAvailable() {
@@ -90,12 +87,14 @@ bool TraceRunner::isBackwardStepAvailable() {
 
 bool TraceRunner::isFindMatchAvailable() {
     // Find match is only available if the current step type is RULE_MATCH or RULE_MATCH_FAILED.
+    if (_currentStep >= _traceSteps.size() && _parseComplete) { return false; }
     TraceStep& step = _traceSteps[_currentStep];
     return (step.type == RULE_MATCH || step.type == RULE_MATCH_FAILED);
 }
 
 bool TraceRunner::isMatchApplicationAvailable() {
     // Match application is only available if the current step type is RULE_APPLICATION.
+    if (_currentStep >= _traceSteps.size() && _parseComplete) { return false; }
     TraceStep& step = _traceSteps[_currentStep];
     return (step.type == RULE_APPLICATION);
 }
