@@ -199,6 +199,11 @@ bool TraceRunner::parseStep() {
         // this method.
         TraceStep step;
 
+        // Set sensible defaults.
+        step.contextName = "";
+        step.endOfContext = false;
+        step.type = UNKNOWN;
+
         if (_xml->atEnd()) {
             // If we have reached the end of the tracefile, there is no more parsing
             // to do. Mark parsing as complete and return true, since the end of the
@@ -311,16 +316,10 @@ bool TraceRunner::parseStartElement(TraceStep* step) {
     QXmlStreamReader::TokenType tokenType;
     switch (type) {
     case RULE_MATCH:
-        // If the match failed, there is nothing more to parse, since there
-        // will not be a morphism.
-        if (_xml->attributes().value("success") == "false") {
-            step->type = RULE_MATCH_FAILED;
-            qDebug() << "Found a failed rule match";
-            break;
-        }
+        step->type = (_xml->attributes().value("success") == "true") ? RULE_MATCH : RULE_MATCH_FAILED;
 
-        // If the match was successful, keep parsing until the </match> end
-        // element is found, to get the nodes and edges from the rule match.
+        // Keep parsing until the </match> end element is found, to get the nodes
+        // and edges from the rule match (if there are any).
         step->type = RULE_MATCH;
         tokenType = _xml->readNext();
         while (! (tokenType == QXmlStreamReader::EndElement && _xml->name() == "match") ) {
