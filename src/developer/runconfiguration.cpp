@@ -311,10 +311,46 @@ void RunConfiguration::runConfiguration()
     // the trace.
     if (_config->hasProgramTracing()) {
         QString programPath = prog->absolutePath().replace(".gp2", "_tracing.gp2");
-        QFile::copy(prog->absolutePath(), programPath);
+        if (QFile::exists(programPath)) {
+            if (! QFile::remove(programPath)) {
+                QMessageBox::information(
+                            this,
+                            tr("Tracing Error"),
+                            tr("Failed to make a copy of the program file because "
+                               "the target file already exists and could not be deleted."));
+                return;
+            }
+        }
+        if (! QFile::copy(prog->absolutePath(), programPath)) {
+            QMessageBox::information(
+                        this,
+                        tr("Tracing Error"),
+                        tr("Failed to make a copy of the program file because "
+                           "the target file could not be written."));
+            return;
+        }
 
         QString graphPath = graph->absolutePath().replace(".host", "_tracing.host");
-        QFile::copy(graph->absolutePath(), graphPath);
+        if (QFile::exists(graphPath)) {
+            if (! QFile::remove(graphPath)) {
+                QMessageBox::information(
+                            this,
+                            tr("Tracing Error"),
+                            tr("Failed to make a copy of the graph file because "
+                               "the target file already exists and could not be deleted."));
+                return;
+            }
+        }
+        if (! QFile::copy(graph->absolutePath(), graphPath)) {
+            if (! QFile::remove(graphPath)) {
+                QMessageBox::information(
+                            this,
+                            tr("Tracing Error"),
+                            tr("Failed to make a copy of the graph file because "
+                               "the target file could not be written."));
+                return;
+            }
+        }
     }
 
     /* Desired location of output */
