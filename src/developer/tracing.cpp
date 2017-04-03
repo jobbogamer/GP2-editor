@@ -74,6 +74,10 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
         return;
     }
 
+    // Pass the program to the program widget.
+    _ui->programView->setPlainText(_programFile->program());
+    _ui->programView->parse();
+
     updateUI();
 
     // We can now signal that tracing is ready, because we have everything
