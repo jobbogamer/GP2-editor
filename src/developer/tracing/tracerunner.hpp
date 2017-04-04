@@ -9,13 +9,14 @@
 #include "graph.hpp"
 #include "program.hpp"
 #include "tracestep.hpp"
+#include "token.hpp"
 
 namespace Developer {
 
 class TraceRunner
 {
 public:
-    TraceRunner(QString traceFile, Graph* graph, Program* program);
+    TraceRunner(QString traceFile, Graph* graph, QVector<Token*> programTokens);
     ~TraceRunner();
 
     /**
@@ -23,6 +24,13 @@ public:
      * will automatically be updated while stepping through the trace.
      */
     Graph* graph();
+
+    /**
+     * Returns a pointer to the Token object representing the current position
+     * in the program text. This should be used to perform text highlighting in
+     * the program source.
+     */
+    Token* currentToken();
 
     /**
      * Call this after using the constructor to check whether the TraceRunner
@@ -103,13 +111,14 @@ public:
 
 private:
     Graph* _graph;
-    Program* _program;
+    QVector<Token*> _programTokens;
     QXmlStreamReader* _xml;
     QFile _tracefile;
     bool _initialised;
     bool _parseComplete;
     QVector<TraceStep> _traceSteps;
     int _currentStep;
+    Token* _currentToken;
     QStack<TraceStepType> _contextStack;
 
     bool parseStep();

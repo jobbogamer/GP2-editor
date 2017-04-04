@@ -59,6 +59,8 @@ public:
     int gutterWidth() const;
     void drawGutter(QPaintEvent *event);
 
+    QVector<Token*> tokens() const;
+
 public slots:
     virtual void parse() = 0;
 

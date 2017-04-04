@@ -41,6 +41,11 @@ CodeEditor::CodeEditor(QWidget *parent)
     updateGutterWidth(0);
 }
 
+QVector<Token*> CodeEditor::tokens() const
+{
+    return _tokens;
+}
+
 int CodeEditor::gutterWidth() const
 {
     int characters = 1;

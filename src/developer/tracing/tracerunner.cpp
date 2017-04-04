@@ -11,14 +11,15 @@ namespace Developer {
 
 #define QSTRING(string) QString::fromStdString(string)
 
-TraceRunner::TraceRunner(QString traceFile, Graph* graph, Program* program) :
+TraceRunner::TraceRunner(QString traceFile, Graph* graph, QVector<Token*> programTokens) :
     _graph(graph),
-    _program(program),
+    _programTokens(programTokens),
     _tracefile(traceFile),
     _initialised(false),
     _parseComplete(false),
     _traceSteps(),
     _currentStep(-1),
+    _currentToken(0),
     _contextStack()
 {
     // Attempt to open the tracefile.
@@ -62,6 +63,10 @@ TraceRunner::~TraceRunner() {
 
 Graph* TraceRunner::graph() {
     return _graph;
+}
+
+Token* TraceRunner::currentToken() {
+    return _currentToken;
 }
 
 bool TraceRunner::isInitialised() {

@@ -61,9 +61,13 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
     QString programPath = originalProgram->absolutePath().replace(".gp2", "_tracing.gp2");
     _programFile = new Program(programPath);
 
+    // Pass the program to the program widget.
+    _ui->programView->setPlainText(_programFile->program());
+    _ui->programView->parse();
+
     _traceRunner = new TraceRunner(tracefileLocation,
                                    _graphFile,
-                                   _programFile);
+                                   _ui->programView->tokens());
 
     if (!_traceRunner->isInitialised()) {
         QMessageBox::warning(
@@ -74,9 +78,15 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
         return;
     }
 
-    // Pass the program to the program widget.
-    _ui->programView->setPlainText(_programFile->program());
-    _ui->programView->parse();
+    QVector<Token*> tokens = _ui->programView->tokens();
+    for (int i = 0; i < tokens.size(); i++) {
+        Token* token = tokens[i];
+        qDebug() << tr("Token (%1, %2) <%3>: %4")
+                    .arg(token->startPos)
+                    .arg(token->endPos)
+                    .arg(token->lexeme)
+                    .arg(token->text);
+    }
 
     updateUI();
 
