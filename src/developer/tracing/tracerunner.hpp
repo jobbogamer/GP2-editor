@@ -118,7 +118,7 @@ private:
     bool _parseComplete;
     QVector<TraceStep> _traceSteps;
     int _currentStep;
-    Token* _currentToken;
+    QStack<TokenReference> _tokenStack;
     QStack<TraceStepType> _contextStack;
 
     bool parseStep();
@@ -133,6 +133,7 @@ private:
     void exitContext(bool backwards=false);
     void applyCurrentStepChanges();
     void revertCurrentStepChanges();
+    void updateProgramPosition(TraceStep& context);
 };
 
 }

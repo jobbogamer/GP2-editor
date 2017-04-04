@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QIODevice>
 #include "translate/translate.hpp"
+#include "programtokens.hpp"
 
 namespace Developer {
 
@@ -19,7 +20,7 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, QVector<Token*> progra
     _parseComplete(false),
     _traceSteps(),
     _currentStep(-1),
-    _currentToken(0),
+    _tokenStack(),
     _contextStack()
 {
     // Attempt to open the tracefile.
@@ -54,6 +55,17 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, QVector<Token*> progra
     // initialised the XML reader, and found the root <trace> element.
     _currentStep = 0;
     _initialised = true;
+
+    // TODO: Remove this!
+    for (int i = 0; i < _programTokens.size(); i++) {
+        Token* token = _programTokens[i];
+        if (token->text == "Main") {
+            TokenReference foundToken;
+            foundToken.token = token;
+            foundToken.index = i;
+            _tokenStack.push(foundToken);
+        }
+    }
 }
 
 TraceRunner::~TraceRunner() {
@@ -66,7 +78,7 @@ Graph* TraceRunner::graph() {
 }
 
 Token* TraceRunner::currentToken() {
-    return _currentToken;
+    return _tokenStack.top().token;
 }
 
 bool TraceRunner::isInitialised() {
@@ -601,7 +613,6 @@ label_t TraceRunner::parseLabel(QString label, QString mark) {
 
 void TraceRunner::enterContext(TraceStep& context, bool backwards/*=false*/) {
     _contextStack.push(context.type);
-    qDebug() << "Context stack =" << _contextStack;
 
     // TODO: Update the program positon, taking into account whether we
     // are stepping forwards or backwards.
@@ -614,6 +625,49 @@ void TraceRunner::exitContext(bool backwards/*=false*/) {
 
     // TODO: Update the program position, taking into account whether we
     // are stepping forwards or backwards.
+}
+
+
+void TraceRunner::updateProgramPosition(TraceStep& context) {
+    int searchPos = _tokenStack.top().index;
+
+    TokenReference foundToken;
+    foundToken.token = 0;
+    foundToken.index = -1;
+
+    switch (context.type) {
+    case RULE_MATCH:
+    case RULE_MATCH_FAILED:
+    case RULE_APPLICATION:
+        // We do not need to update the program position for <match> or <apply>, since
+        // they are component parts of a rule in the source text.
+        break;
+
+    case RULE:
+    {
+        // For some reason, rule names are prefixed with "Main_" by the compiler,
+        // so we need to remove that from the context name before searching for the
+        // correct token.
+        QString ruleName = context.contextName.remove("Main_");
+        for (; searchPos < _programTokens.size(); searchPos++) {
+            Token* token = _programTokens[searchPos];
+            if (token->lexeme == ProgramLexeme_Identifier) {
+                if (token->text == ruleName) {
+                    foundToken.token = token;
+                    foundToken.index = searchPos;
+
+                    _tokenStack.pop();
+                    _tokenStack.push(foundToken);
+                    break;
+                }
+            }
+        }
+    }
+
+    default:
+        qDebug() << "Unhandled context of type" << context.type;
+        break;
+    }
 }
 
 

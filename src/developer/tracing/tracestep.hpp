@@ -7,6 +7,7 @@
 #include "node.hpp"
 #include "edge.hpp"
 #include "parsertypes.hpp"
+#include "token.hpp"
 
 namespace Developer {
 
@@ -68,6 +69,11 @@ struct TraceStep {
     QString contextName;
     bool endOfContext;
     QVector<GraphChange> graphChanges;
+};
+
+struct TokenReference {
+    Token* token;
+    int index;
 };
 
 /**

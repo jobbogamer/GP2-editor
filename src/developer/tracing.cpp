@@ -176,6 +176,10 @@ void Tracing::updateUI() {
 
     // Update the graph view.
     _ui->graphView->setGraph(_traceRunner->graph());
+
+    // TODO: Highlight the current program token.
+    Token* highlightedToken = _traceRunner->currentToken();
+    qDebug() << "Token" << highlightedToken->startPos;
 }
 
 /**
