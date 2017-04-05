@@ -78,16 +78,6 @@ void Tracing::loadTracefile(QString tracefileLocation, RunConfig* runConfig, Pro
         return;
     }
 
-    QVector<Token*> tokens = _ui->programView->tokens();
-    for (int i = 0; i < tokens.size(); i++) {
-        Token* token = tokens[i];
-        qDebug() << tr("Token (%1, %2) <%3>: %4")
-                    .arg(token->startPos)
-                    .arg(token->endPos)
-                    .arg(token->lexeme)
-                    .arg(token->text);
-    }
-
     updateUI();
 
     // We can now signal that tracing is ready, because we have everything

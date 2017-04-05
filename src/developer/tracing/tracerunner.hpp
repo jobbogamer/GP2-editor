@@ -129,11 +129,12 @@ private:
     edge_t parseEdge(QXmlStreamAttributes xmlAttributes);
     node_t parseNode(QXmlStreamAttributes xmlAttributes);
 
-    void enterContext(TraceStep& context, bool backwards=false);
-    void exitContext(bool backwards=false);
+    void enterContext(TraceStep& context);
+    void exitContext();
     void applyCurrentStepChanges();
     void revertCurrentStepChanges();
-    void updateProgramPosition(TraceStep& context);
+    void updateProgramPosition(bool backwards);
+    void replaceCurrentHighlight(TokenReference newToken);
 };
 
 }

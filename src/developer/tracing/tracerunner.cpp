@@ -47,6 +47,13 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, QVector<Token*> progra
         return;
     }
 
+    // Ensure that no tokens are currently highlighted. This may occur if, for example,
+    // a traced program is run twice.
+    for (int i = 0; i < _programTokens.size(); i++) {
+        Token* token = _programTokens[i];
+        token->emphasise = false;
+    }
+
     // Parse the first step in the trace to get started.
     bool success = parseStep();
     if (!success) { return; }
@@ -56,17 +63,9 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, QVector<Token*> progra
     _currentStep = 0;
     _initialised = true;
 
-    // TODO: Remove this!
-    for (int i = 0; i < _programTokens.size(); i++) {
-        Token* token = _programTokens[i];
-        if (token->text == "Main") {
-            token->emphasise = true;
-            TokenReference foundToken;
-            foundToken.token = token;
-            foundToken.index = i;
-            _tokenStack.push(foundToken);
-        }
-    }
+    // Now that the first step in the trace is prepared, update the program position
+    // to highlight that first step.
+    updateProgramPosition(false);
 }
 
 TraceRunner::~TraceRunner() {
@@ -145,7 +144,11 @@ bool TraceRunner::stepForward() {
         }
     }
 
-    // If we are not parsing anything, we can return true.
+    // We had to wait until after parsing a step to update the program position,
+    // because if we had not yet parsed the next step, we would not know what
+    // type of program token to search for.
+    updateProgramPosition(false);
+
     return true;
 }
 
@@ -163,10 +166,10 @@ bool TraceRunner::stepBackward() {
         revertCurrentStepChanges();
     }
     else if (step.endOfContext) {
-        enterContext(step, true);
+        enterContext(step);
     }
     else {
-        exitContext(true);
+        exitContext();
     }
 
     // We are not parsing anything because any time we go backwards, we have
@@ -612,31 +615,27 @@ label_t TraceRunner::parseLabel(QString label, QString mark) {
 }
 
 
-void TraceRunner::enterContext(TraceStep& context, bool backwards/*=false*/) {
+void TraceRunner::enterContext(TraceStep& context) {
     _contextStack.push(context.type);
-
-    // TODO: Update the program positon, taking into account whether we
-    // are stepping forwards or backwards.
 }
 
 
-void TraceRunner::exitContext(bool backwards/*=false*/) {
+void TraceRunner::exitContext() {
     _contextStack.pop();
-    qDebug() << "Context stack =" << _contextStack;
-
-    // TODO: Update the program position, taking into account whether we
-    // are stepping forwards or backwards.
 }
 
 
-void TraceRunner::updateProgramPosition(TraceStep& context) {
-    int searchPos = _tokenStack.top().index;
+void TraceRunner::updateProgramPosition(bool backwards) {
+    int searchPos = _tokenStack.empty() ? 0 : _tokenStack.top().index;
 
     TokenReference foundToken;
     foundToken.token = 0;
     foundToken.index = -1;
 
-    switch (context.type) {
+    // Get the current step so we can find it in the source text to highlight.
+    TraceStep& step = _traceSteps[_currentStep];
+
+    switch (step.type) {
     case RULE_MATCH:
     case RULE_MATCH_FAILED:
     case RULE_APPLICATION:
@@ -649,7 +648,7 @@ void TraceRunner::updateProgramPosition(TraceStep& context) {
         // For some reason, rule names are prefixed with "Main_" by the compiler,
         // so we need to remove that from the context name before searching for the
         // correct token.
-        QString ruleName = context.contextName.remove("Main_");
+        QString ruleName = step.contextName.remove("Main_");
         for (; searchPos < _programTokens.size(); searchPos++) {
             Token* token = _programTokens[searchPos];
             if (token->lexeme == ProgramLexeme_Identifier) {
@@ -657,8 +656,7 @@ void TraceRunner::updateProgramPosition(TraceStep& context) {
                     foundToken.token = token;
                     foundToken.index = searchPos;
 
-                    _tokenStack.pop();
-                    _tokenStack.push(foundToken);
+                    replaceCurrentHighlight(foundToken);
                     break;
                 }
             }
@@ -666,9 +664,22 @@ void TraceRunner::updateProgramPosition(TraceStep& context) {
     }
 
     default:
-        qDebug() << "Unhandled context of type" << context.type;
+        qDebug() << "Unhandled step of type" << step.type;
         break;
     }
+}
+
+
+void TraceRunner::replaceCurrentHighlight(TokenReference newToken) {
+    // Pop the top of the stack, and un-highlight that token.
+    if (!_tokenStack.empty()) {
+        TokenReference previous = _tokenStack.pop();
+        previous.token->emphasise = false;
+    }
+
+    // Highlight the new token, and push it onto the stack.
+    newToken.token->emphasise = true;
+    _tokenStack.push(newToken);
 }
 
 
