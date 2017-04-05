@@ -77,7 +77,7 @@ public:
      *  will be a value from the Lexemes enum
      * \return The QTextCharFormat associated with this lexeme
      */
-    QTextCharFormat format(int type) const;
+    QTextCharFormat format(int type, bool emphasise) const;
 
 public slots:
     /*!

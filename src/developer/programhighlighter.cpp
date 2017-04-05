@@ -36,7 +36,7 @@ void ProgramHighlighter::highlightBlock(const QString &text)
         // Is this entire block contained in this token?
         if(t->startPos <= startPosition && t->endPos >= endPosition)
         {
-            setFormat(0, text.length(), format(t->lexeme));
+            setFormat(0, text.length(), format(t->lexeme, t->emphasise));
             return;
         }
 
@@ -46,11 +46,11 @@ void ProgramHighlighter::highlightBlock(const QString &text)
             if(t->endPos > endPosition)
                 setFormat(t->startPos - startPosition,
                           text.length() - (t->startPos - startPosition),
-                          format(t->lexeme));
+                          format(t->lexeme, t->emphasise));
             else
                 setFormat(t->startPos - startPosition,
                           t->endPos - t->startPos,
-                          format(t->lexeme));
+                          format(t->lexeme, t->emphasise));
         }
         // If not is the end position in range?
         else if(t->endPos > startPosition && t->endPos <= endPosition)
@@ -58,16 +58,16 @@ void ProgramHighlighter::highlightBlock(const QString &text)
             if(t->startPos < startPosition)
                 setFormat(0,
                           t->endPos - t->startPos,
-                          format(t->lexeme));
+                          format(t->lexeme, t->emphasise));
             else
                 setFormat(t->startPos - startPosition,
                           t->endPos - t->startPos,
-                          format(t->lexeme));
+                          format(t->lexeme, t->emphasise));
         }
     }
 }
 
-QTextCharFormat ProgramHighlighter::format(int type) const
+QTextCharFormat ProgramHighlighter::format(int type, bool emphasise) const
 {
     QSettings settings;
     QColor background = settings.value(
@@ -101,7 +101,8 @@ QTextCharFormat ProgramHighlighter::format(int type) const
                         defaultFont
                         ).value<QFont>()
                     );
-        return ret;
+        break;
+
     case ProgramLexeme_Declaration:
         ret.setForeground(settings.value(
                               "Editor/Types/Identifier/Foreground",
@@ -118,7 +119,8 @@ QTextCharFormat ProgramHighlighter::format(int type) const
                         defaultFont
                         ).value<QFont>()
                     );
-        return ret;
+        break;
+
     case ProgramLexeme_Identifier:
         ret.setForeground(settings.value(
                               "Editor/Types/Identifier/Foreground",
@@ -135,7 +137,8 @@ QTextCharFormat ProgramHighlighter::format(int type) const
                         defaultFont
                         ).value<QFont>()
                     );
-        return ret;
+        break;
+
     /*case Number:
         ret.setForeground(settings.value(
                               "Editor/Types/Number/Foreground",
@@ -152,7 +155,8 @@ QTextCharFormat ProgramHighlighter::format(int type) const
                         defaultFont
                         ).value<QFont>()
                     );
-        return ret;
+        break;
+
     case QuotationCharacter:
     case QuotedString:
         ret.setForeground(settings.value(
@@ -170,7 +174,8 @@ QTextCharFormat ProgramHighlighter::format(int type) const
                         defaultFont
                         ).value<QFont>()
                     );
-        return ret;*/
+        break;*/
+
     case ProgramLexeme_DeclarationOperator:
     //case ProgramLexeme_DeclarationSeparator:
     case ProgramLexeme_Keyword:
@@ -196,7 +201,8 @@ QTextCharFormat ProgramHighlighter::format(int type) const
                         defaultFont
                         ).value<QFont>()
                     );
-        return ret;
+        break;
+
     case ProgramLexeme_Comment:
     case ProgramLexeme_CommentOpen:
     case ProgramLexeme_CommentClose:
@@ -215,7 +221,8 @@ QTextCharFormat ProgramHighlighter::format(int type) const
                         defaultCommentFont
                         ).value<QFont>()
                     );
-        return ret;
+        break;
+
     case ProgramLexeme_Error:
         ret.setForeground(settings.value(
                               "Editor/Types/Error/Foreground",
@@ -232,7 +239,9 @@ QTextCharFormat ProgramHighlighter::format(int type) const
                         defaultFont
                         ).value<QFont>()
                     );
+        // Return early because we don't want to check the highlight property.
         return ret;
+
     default:
         qDebug() << "ProgramHighlighter::format(): Unknown type passed in: "
                  << type;
@@ -251,8 +260,22 @@ QTextCharFormat ProgramHighlighter::format(int type) const
                         defaultFont
                         ).value<QFont>()
                     );
+        // Return early because we don't want to check the highlight property.
         return ret;
     }
+
+    // Now check the highlight property. If it is true, we will override the
+    // background colour that was previously set and use the highlight colour.
+    if (emphasise) {
+        QColor emphasisColour = settings.value(
+            "Editor/Types/Emphasis/Background",
+            QColor(144, 249, 114) // pale green
+            ).value<QColor>();
+
+        ret.setBackground(emphasisColour);
+    }
+
+    return ret;
 }
 
 }
