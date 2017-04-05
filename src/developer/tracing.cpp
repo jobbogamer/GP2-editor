@@ -174,12 +174,9 @@ void Tracing::updateUI() {
         _ui->matchButton->setEnabled(_traceRunner->isFindMatchAvailable());
     }
 
-    // Update the graph view.
+    // Update the program and graph views.
     _ui->graphView->setGraph(_traceRunner->graph());
-
-    // TODO: Highlight the current program token.
-    Token* highlightedToken = _traceRunner->currentToken();
-    qDebug() << "Token" << highlightedToken->startPos;
+    _ui->programView->highlighter()->rehighlight();
 }
 
 /**

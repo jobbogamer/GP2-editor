@@ -5,10 +5,9 @@
 #define PROGRAMEDITOR_HPP
 
 #include "codeeditor.hpp"
+#include "programhighlighter.hpp"
 
 namespace Developer {
-
-class ProgramHighlighter;
 
 /*!
  * \brief The ProgramEditor class encapsulates the necessary classes to display

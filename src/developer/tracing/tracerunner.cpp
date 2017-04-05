@@ -60,6 +60,7 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, QVector<Token*> progra
     for (int i = 0; i < _programTokens.size(); i++) {
         Token* token = _programTokens[i];
         if (token->text == "Main") {
+            token->emphasise = true;
             TokenReference foundToken;
             foundToken.token = token;
             foundToken.index = i;

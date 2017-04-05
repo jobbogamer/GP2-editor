@@ -269,7 +269,7 @@ QTextCharFormat ProgramHighlighter::format(int type, bool emphasise) const
     if (emphasise) {
         QColor emphasisColour = settings.value(
             "Editor/Types/Emphasis/Background",
-            QColor(144, 249, 114) // pale green
+            QColor(157, 255, 130) // pale green
             ).value<QColor>();
 
         ret.setBackground(emphasisColour);
