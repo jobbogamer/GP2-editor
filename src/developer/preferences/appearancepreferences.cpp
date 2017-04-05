@@ -61,13 +61,14 @@ void AppearancePreferences::reset()
     // Default, identifiers, declaration identifiers, operators, keywords,
     // comments and errors
     tokens << ProgramLexeme_Default << ProgramLexeme_Identifier << ProgramLexeme_Declaration << ProgramLexeme_DeclarationOperator
-           << ProgramLexeme_Keyword << ProgramLexeme_Comment << ProgramLexeme_Error;
+           << ProgramLexeme_Keyword << ProgramLexeme_Comment << ProgramLexeme_Error << ProgramLexeme_Default;
 
     _ui->programTokenTable->setRowCount(tokens.count());
 
     for(row = 0; row < tokens.count(); ++row)
     {
-        format = _ui->plainTextEdit->highlighter()->format(tokens.at(row));
+        bool emphasise = (row == tokens.count() - 1);
+        format = _ui->plainTextEdit->highlighter()->format(tokens.at(row), emphasise);
 
         for(column = 0; column < 4; ++column)
         {
@@ -105,6 +106,10 @@ void AppearancePreferences::reset()
                                 "AppearancePreferences::reset(), passed "
                              << tokens.at(row);
                     break;
+                }
+
+                if (row == tokens.count() - 1) {
+                    item->setText("Emphasised");
                 }
 
                 item->setFlags(Qt::ItemIsSelectable);
