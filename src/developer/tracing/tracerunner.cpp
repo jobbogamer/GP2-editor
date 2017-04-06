@@ -172,6 +172,10 @@ bool TraceRunner::stepBackward() {
         exitContext();
     }
 
+    // Now update the program position to reflect that stepping forwards from
+    // here will re-apply the step we just reverted.
+    updateProgramPosition(true);
+
     // We are not parsing anything because any time we go backwards, we have
     // already parsed the steps before the current one. Therefore we will never
     // encounter an error.
@@ -269,6 +273,22 @@ bool TraceRunner::parseStep() {
             qDebug() << "Found end of context" << name;
             step.type = type;
             step.endOfContext = true;
+
+            // If this is the end of a rule context, search back in the trace steps to
+            // find the start of the rule context. It must be the most recently added one,
+            // since rules cannot be nested. This way, we can get the name of the rule to
+            // store in this TraceStep, so that program highlighting is easier when
+            // stepping backwards.
+            if (step.type == RULE) {
+                for (int i = _traceSteps.size() - 1; i >= 0; i--) {
+                    TraceStep& oldStep = _traceSteps[i];
+                    if (oldStep.type == RULE) {
+                        step.contextName = oldStep.contextName;
+                        break;
+                    }
+                }
+            }
+
             break;
         }
 
@@ -626,7 +646,16 @@ void TraceRunner::exitContext() {
 
 
 void TraceRunner::updateProgramPosition(bool backwards) {
-    int searchPos = _tokenStack.empty() ? 0 : _tokenStack.top().index;
+    // We have to start the search at the currently highlighted token. However,
+    // if the token stack is empty, we have to start at the start or the end of
+    // the program tokens vector, because there is no current token.
+    int searchPos;
+    if (_tokenStack.empty()) {
+        searchPos = (backwards) ? (_programTokens.size() - 1) : 0;
+    }
+    else {
+        searchPos = (backwards) ? (_tokenStack.top().index - 1) : (_tokenStack.top().index + 1);
+    }
 
     TokenReference foundToken;
     foundToken.token = 0;
@@ -645,9 +674,11 @@ void TraceRunner::updateProgramPosition(bool backwards) {
 
     case RULE:
     {
-        // If this is the end of a rule context, we don't need to do anything, because
-        // rules are represented solely by text, and do not have end tokens.
-        if (step.endOfContext) {
+        // Depending on the direction we are moving through the program, we need to
+        // either ignore the end of the context or the start of it. This is because
+        // a rule call is represented by a single token in the source code, so we
+        // don't need to move the highlight.
+        if (backwards != step.endOfContext) {
             break;
         }
 
@@ -655,7 +686,8 @@ void TraceRunner::updateProgramPosition(bool backwards) {
         // so we need to remove that from the context name before searching for the
         // correct token.
         QString ruleName = step.contextName.remove("Main_");
-        for (; searchPos < _programTokens.size(); searchPos++) {
+
+        while (searchPos >= 0 && searchPos < _programTokens.size()) {
             Token* token = _programTokens[searchPos];
             if (token->lexeme == ProgramLexeme_Identifier) {
                 if (token->text == ruleName) {
@@ -665,7 +697,11 @@ void TraceRunner::updateProgramPosition(bool backwards) {
                     break;
                 }
             }
+
+            if (backwards) { searchPos -= 1; }
+            else           { searchPos += 1; }
         }
+
         break;
     }
 
@@ -675,7 +711,7 @@ void TraceRunner::updateProgramPosition(bool backwards) {
         // closing brace instead of the opening one.
         int lexeme = (step.endOfContext) ? ProgramLexeme_CloseBrace : ProgramLexeme_OpenBrace;
 
-        for (; searchPos < _programTokens.size(); searchPos++) {
+        while (searchPos >= 0 && searchPos < _programTokens.size()) {
             Token* token = _programTokens[searchPos];
             if (token->lexeme == lexeme) {
                 foundToken.token = token;
@@ -683,7 +719,11 @@ void TraceRunner::updateProgramPosition(bool backwards) {
                 replaceCurrentHighlight(foundToken);
                 break;
             }
+
+            if (backwards) { searchPos -= 1; }
+            else           { searchPos += 1; }
         }
+
         break;
     }
 
