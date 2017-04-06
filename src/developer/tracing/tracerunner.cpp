@@ -661,7 +661,6 @@ void TraceRunner::updateProgramPosition(bool backwards) {
                 if (token->text == ruleName) {
                     foundToken.token = token;
                     foundToken.index = searchPos;
-
                     replaceCurrentHighlight(foundToken);
                     break;
                 }
@@ -670,6 +669,39 @@ void TraceRunner::updateProgramPosition(bool backwards) {
         break;
     }
 
+    case RULE_SET:
+    {
+        // If this is the end of the context, we need to search for the
+        // closing brace instead of the opening one.
+        int lexeme = (step.endOfContext) ? ProgramLexeme_CloseBrace : ProgramLexeme_OpenBrace;
+
+        for (; searchPos < _programTokens.size(); searchPos++) {
+            Token* token = _programTokens[searchPos];
+            if (token->lexeme == lexeme) {
+                foundToken.token = token;
+                foundToken.index = searchPos;
+                replaceCurrentHighlight(foundToken);
+                break;
+            }
+        }
+        break;
+    }
+
+    case LOOP:
+    case LOOP_ITERATION:
+    case PROCEDURE:
+    case IF_CONTEXT:
+    case TRY_CONTEXT:
+    case BRANCH_CONDITION:
+    case THEN_BRANCH:
+    case ELSE_BRANCH:
+    case OR_CONTEXT:
+    case OR_LEFT:
+    case OR_RIGHT:
+    case SKIP:
+    case BREAK:
+    case FAIL:
+    case UNKNOWN:
     default:
         qDebug() << "Unhandled step of type" << step.type;
         break;
