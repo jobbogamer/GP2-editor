@@ -133,8 +133,10 @@ private:
     void exitContext();
     void applyCurrentStepChanges();
     void revertCurrentStepChanges();
+
     void updateProgramPosition(bool backwards);
     void replaceCurrentHighlight(TokenReference newToken);
+    void removeHighlights();
 };
 
 }

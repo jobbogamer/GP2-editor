@@ -49,10 +49,7 @@ TraceRunner::TraceRunner(QString traceFile, Graph* graph, QVector<Token*> progra
 
     // Ensure that no tokens are currently highlighted. This may occur if, for example,
     // a traced program is run twice.
-    for (int i = 0; i < _programTokens.size(); i++) {
-        Token* token = _programTokens[i];
-        token->emphasise = false;
-    }
+    removeHighlights();
 
     // Parse the first step in the trace to get started.
     bool success = parseStep();
@@ -661,6 +658,13 @@ void TraceRunner::updateProgramPosition(bool backwards) {
     foundToken.token = 0;
     foundToken.index = -1;
 
+    // If we are at the end of the trace, highlight nothing and return early.
+    if (_currentStep >= _traceSteps.size()) {
+        removeHighlights();
+        _tokenStack.pop();
+        return;
+    }
+
     // Get the current step so we can find it in the source text to highlight.
     TraceStep& step = _traceSteps[_currentStep];
 
@@ -759,6 +763,14 @@ void TraceRunner::replaceCurrentHighlight(TokenReference newToken) {
     // Highlight the new token, and push it onto the stack.
     newToken.token->emphasise = true;
     _tokenStack.push(newToken);
+}
+
+
+void TraceRunner::removeHighlights() {
+    for (int i = 0; i < _programTokens.size(); i++) {
+        Token* token = _programTokens[i];
+        token->emphasise = false;
+    }
 }
 
 
