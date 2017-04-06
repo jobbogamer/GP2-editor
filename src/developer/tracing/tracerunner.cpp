@@ -645,6 +645,12 @@ void TraceRunner::updateProgramPosition(bool backwards) {
 
     case RULE:
     {
+        // If this is the end of a rule context, we don't need to do anything, because
+        // rules are represented solely by text, and do not have end tokens.
+        if (step.endOfContext) {
+            break;
+        }
+
         // For some reason, rule names are prefixed with "Main_" by the compiler,
         // so we need to remove that from the context name before searching for the
         // correct token.
@@ -661,6 +667,7 @@ void TraceRunner::updateProgramPosition(bool backwards) {
                 }
             }
         }
+        break;
     }
 
     default:
