@@ -136,6 +136,8 @@ private:
 
     void updateProgramPosition(bool backwards);
     void replaceCurrentHighlight(TokenReference newToken);
+    void pushHighlight(TokenReference newToken);
+    void popHighlight();
     void removeHighlights();
 };
 

@@ -286,6 +286,42 @@ bool TraceRunner::parseStep() {
                 }
             }
 
+            // If this is the end of a procedure, we need to record the name of that
+            // procedure so that we know where to jump to when stepping over it in
+            // reverse. This is slightly more complicated than finding the start of
+            // the rule above, because procedures can be nested. For example, if the
+            // trace looks like this:
+            //
+            // <procedure name="outer">
+            //     <procedure name="inner">
+            //          ...
+            //     </procedure>
+            // </procedure>
+            //
+            // then we cannot just take the first procedure TraceStep we find, because
+            // we will incorrectly record the outer procedure as "inner". So while
+            // searching backwards, we have to count the number of other closed contexts
+            // we come across, and only record the name once we are sure we have skipped
+            // the open context for every close context.
+            if (step.type == PROCEDURE) {
+                int nestedContexts = 0;
+                for (int i = _traceSteps.size() - 1; i >= 0; i--) {
+                    TraceStep& oldStep = _traceSteps[i];
+                    if (oldStep.type == PROCEDURE) {
+                        if (oldStep.endOfContext) {
+                            nestedContexts += 1;
+                        }
+                        else if (nestedContexts > 0) {
+                            nestedContexts -= 1;
+                        }
+                        else {
+                            step.contextName = oldStep.contextName;
+                            break;
+                        }
+                    }
+                }
+            }
+
             break;
         }
 
@@ -643,6 +679,44 @@ void TraceRunner::exitContext() {
 
 
 void TraceRunner::updateProgramPosition(bool backwards) {
+    // If we are currently pointing at a procedure call, move the highlight to
+    // the declaration of that procedure before searching for the next token.
+    // Since a procedure can be declared pretty much anywhere, we have to
+    // start the search at the beginning of the token vector.
+    if (_currentStep > 0) {
+        TraceStep& previousStep = _traceSteps[_currentStep - 1];
+        if (previousStep.type == PROCEDURE && !previousStep.endOfContext) {
+            int searchPos = 0;
+            while (searchPos < _programTokens.size()) {
+                Token* token = _programTokens[searchPos];
+                if (token->lexeme == ProgramLexeme_Declaration) {
+                    if (token->text == previousStep.contextName) {
+                        // To find the actual implementation of the procedure, we have to
+                        // look for the = sign after the name. When a procedure is
+                        // called, the token is still tagged as a declaration (presumably
+                        // to give procedure calls a different colour), and we don't want
+                        // to highlight a procedure call by mistake.
+                        Token* nextToken = _programTokens[searchPos + 1];
+                        if (nextToken->lexeme == ProgramLexeme_DeclarationOperator) {
+                            TokenReference foundToken;
+                            foundToken.token = token;
+                            foundToken.index = searchPos;
+
+                            // Since we will have to jump back to the call site, push the
+                            // token onto the stack rather than replacing it.
+                            pushHighlight(foundToken);
+                            break;
+                        }
+                    }
+                }
+
+                // Even if we're stepping backwards, we started the search at the
+                // beginning of the program, so we always move forwards.
+                searchPos += 1;
+            }
+        }
+    }
+
     // We have to start the search at the currently highlighted token. However,
     // if the token stack is empty, we have to start at the start or the end of
     // the program tokens vector, because there is no current token.
@@ -733,7 +807,28 @@ void TraceRunner::updateProgramPosition(bool backwards) {
 
     case LOOP:
     case LOOP_ITERATION:
+        break;
+
     case PROCEDURE:
+    {
+        while (searchPos >= 0 && searchPos < _programTokens.size()) {
+            Token* token = _programTokens[searchPos];
+            if (token->lexeme == ProgramLexeme_Declaration) {
+                if (token->text == step.contextName) {
+                    foundToken.token = token;
+                    foundToken.index = searchPos;
+                    replaceCurrentHighlight(foundToken);
+                    break;
+                }
+            }
+
+            if (backwards) { searchPos -= 1; }
+            else           { searchPos += 1; }
+        }
+
+        break;
+    }
+
     case IF_CONTEXT:
     case TRY_CONTEXT:
     case BRANCH_CONDITION:
@@ -763,6 +858,29 @@ void TraceRunner::replaceCurrentHighlight(TokenReference newToken) {
     // Highlight the new token, and push it onto the stack.
     newToken.token->emphasise = true;
     _tokenStack.push(newToken);
+}
+
+
+void TraceRunner::pushHighlight(TokenReference newToken) {
+    if (!_tokenStack.empty()) {
+        // Note we are *not* popping the stack here, just peeking.
+        TokenReference previous = _tokenStack.top();
+        previous.token->emphasise = false;
+    }
+
+    newToken.token->emphasise = true;
+    _tokenStack.push(newToken);
+}
+
+
+void TraceRunner::popHighlight() {
+    TokenReference topToken = _tokenStack.pop();
+    topToken.token->emphasise = false;
+
+    if (!_tokenStack.empty()) {
+        topToken = _tokenStack.top();
+        topToken.token->emphasise = true;
+    }
 }
 
 
