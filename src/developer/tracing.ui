@@ -137,7 +137,14 @@
     </layout>
    </item>
    <item>
-    <widget class="Developer::ProgramEditor" name="programView"/>
+    <widget class="Developer::ProgramEditor" name="programView">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
