@@ -811,6 +811,13 @@ void TraceRunner::updateProgramPosition(bool backwards) {
 
     case PROCEDURE:
     {
+        // If this is the end of the context, we should simply pop the
+        // token stack to get back to the call site.
+        if (step.endOfContext) {
+            popHighlight();
+            break;
+        }
+
         while (searchPos >= 0 && searchPos < _programTokens.size()) {
             Token* token = _programTokens[searchPos];
             if (token->lexeme == ProgramLexeme_Declaration) {
