@@ -350,9 +350,10 @@ void TraceRunner::updateProgramPosition(bool backwards) {
 
     case PROCEDURE:
     {
-        // If this is the end of the context, we should simply pop the
-        // token stack to get back to the call site.
-        if (step.endOfContext) {
+        // If we are stepping forward and this is the end of the context, or
+        // we are stepping backwards and this is the start of the context, we
+        // simply pop the token stack to get back to the call site.
+        if (!backwards && step.endOfContext) {
             popHighlight();
             break;
         }
