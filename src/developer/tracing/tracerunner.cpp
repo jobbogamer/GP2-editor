@@ -260,10 +260,21 @@ void TraceRunner::updateProgramPosition(bool backwards) {
     foundToken.token = 0;
     foundToken.index = -1;
 
-    // If we are at the end of the trace, highlight nothing and return early.
+    // If we are at the end of the trace, unhighlight everything and return early.
     if (_currentStep >= _traceSteps.size()) {
         removeHighlights();
-        _tokenStack.pop();
+        //_tokenStack.pop();
+
+        // Put a new TokenReference on the stack which is identical to the token
+        // that was highlighted at the end of the trace, but with the index
+        // increased by one. This means that if we now step backwards, we start
+        // the search in the correct place.
+        TokenReference previousToken = _tokenStack.pop();
+        TokenReference dummyToken;
+        dummyToken.token = previousToken.token;
+        dummyToken.index = previousToken.index + 1;
+        _tokenStack.push(dummyToken);
+
         return;
     }
 
