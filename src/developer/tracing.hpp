@@ -46,7 +46,7 @@ private:
     Program* _programFile;
 
     void updateUI();
-    void showXMLError();
+    void showError();
 };
 
 }

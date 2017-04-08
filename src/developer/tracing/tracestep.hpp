@@ -76,16 +76,6 @@ struct TokenReference {
     int index;
 };
 
-/**
- * Converts from an XML tag name to a TraceStepType enum value.
- */
-TraceStepType stepTypeFromXML(QStringRef elementName);
-
-/**
- * Converts from an XML tag name to a GraphChangeType enum value.
- */
-GraphChangeType changeTypeFromXML(QStringRef elementName);
-
 }
 
 #endif // TRACESTEP_H

@@ -9,6 +9,7 @@
 #include "graph.hpp"
 #include "program.hpp"
 #include "tracestep.hpp"
+#include "traceparser.hpp"
 #include "token.hpp"
 
 namespace Developer {
@@ -16,8 +17,7 @@ namespace Developer {
 class TraceRunner
 {
 public:
-    TraceRunner(QString traceFile, Graph* graph, QVector<Token*> programTokens);
-    ~TraceRunner();
+    TraceRunner(QString tracefilePath, Graph* graph, QVector<Token*> programTokens);
 
     /**
      * Returns a pointer to the graph being modified by the program. This graph
@@ -107,27 +107,21 @@ public:
      */
     void applyMatch();
 
-    QString getXMLError();
+    /**
+     * Return any error that has occurred during tracing.
+     */
+    QString getError();
 
 private:
     Graph* _graph;
     QVector<Token*> _programTokens;
-    QXmlStreamReader* _xml;
-    QFile _tracefile;
+    TraceParser _traceParser;
     bool _initialised;
-    bool _parseComplete;
     QVector<TraceStep> _traceSteps;
     int _currentStep;
     QStack<TokenReference> _tokenStack;
     QStack<TraceStepType> _contextStack;
-
-    bool parseStep();
-    bool parseStartElement(TraceStep* step);
-    bool parseGraphChange(GraphChange* change);
-
-    label_t parseLabel(QString label, QString mark);
-    edge_t parseEdge(QXmlStreamAttributes xmlAttributes);
-    node_t parseNode(QXmlStreamAttributes xmlAttributes);
+    QString _error;
 
     void enterContext(TraceStep& context);
     void exitContext();

@@ -74,6 +74,7 @@ SET(GPDeveloper_HPP_SRCS
     src/developer/tracing.hpp
     src/developer/tracing/tracerunner.hpp
     src/developer/tracing/tracestep.hpp
+    src/developer/tracing/traceparser.hpp
     src/developer/welcome.hpp
 )
 

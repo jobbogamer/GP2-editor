@@ -89,7 +89,7 @@ void Tracing::goToStart() {
     // Assuming the button is only enabled if it's possible to jump to the
     // start (i.e. we are not already at the start).
     bool success = _traceRunner->goToStart();
-   if (!success) { showXMLError(); }
+   if (!success) { showError(); }
     updateUI();
 }
 
@@ -97,21 +97,21 @@ void Tracing::goToEnd() {
     // Assuming the button is only enabled if it's possible to jump to the
     // end (i.e. we are not already at the end).
     bool success = _traceRunner->goToEnd();
-    if (!success) { showXMLError(); }
+    if (!success) { showError(); }
     updateUI();
 }
 
 void Tracing::stepBack() {
     // Assuming the button is only enabled if a backwards step is available.
     bool success = _traceRunner->stepBackward();
-    if (!success) { showXMLError(); }
+    if (!success) { showError(); }
     updateUI();
 }
 
 void Tracing::stepForward() {
     // Assuming the button is only enabled if a forward step is available.
     bool success = _traceRunner->stepForward();
-    if (!success) { showXMLError(); }
+    if (!success) { showError(); }
     updateUI();
 }
 
@@ -172,12 +172,12 @@ void Tracing::updateUI() {
 /**
  * Show a dialog box explaining that an XML error occurred.
  */
-void Tracing::showXMLError() {
-    qDebug() << "XML error in tracefile:" << _traceRunner->getXMLError();
+void Tracing::showError() {
+    qDebug() << "Error during tracing:" << _traceRunner->getError();
     QMessageBox::warning(
         this,
         tr("Tracing Error"),
-        tr("An error occurred when reading the tracefile. See the log for details.")
+        tr("An error occurred during tracing. See the log for details.")
     );
 }
 
