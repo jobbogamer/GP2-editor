@@ -23,8 +23,8 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
     // the declaration of that procedure before searching for the next token.
     // Since a procedure can be declared pretty much anywhere, we have to
     // start the search at the beginning of the token vector.
-    if (_currentStep) {
-        if (_currentStep->type == PROCEDURE && !_currentStep->endOfContext) {
+    if (_currentStep && _currentStep->type == PROCEDURE) {
+        if (searchDirection == FORWARDS && !_currentStep->endOfContext) {
             int searchPos = 0;
             while (searchPos < _programTokens.size()) {
                 Token* token = _programTokens[searchPos];
