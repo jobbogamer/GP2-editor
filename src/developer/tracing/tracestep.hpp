@@ -71,11 +71,6 @@ struct TraceStep {
     QVector<GraphChange> graphChanges;
 };
 
-struct TokenReference {
-    Token* token;
-    int index;
-};
-
 }
 
 #endif // TRACESTEP_H

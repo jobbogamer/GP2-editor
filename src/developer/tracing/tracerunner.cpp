@@ -1,10 +1,7 @@
 #include "tracerunner.hpp"
 
-#include <QtGlobal>
 #include <QDebug>
-#include <QIODevice>
 #include "translate/translate.hpp"
-#include "programtokens.hpp"
 
 namespace Developer {
 
@@ -12,21 +9,16 @@ namespace Developer {
 
 TraceRunner::TraceRunner(QString tracefilePath, Graph* graph, QVector<Token*> programTokens) :
     _graph(graph),
-    _programTokens(programTokens),
     _traceParser(tracefilePath),
+    _traceHighlighter(programTokens),
     _initialised(false),
     _traceSteps(),
     _currentStep(-1),
-    _tokenStack(),
     _contextStack(),
     _error()
 {
     // Check that the TraceParser was initialised successfully.
     if (!_traceParser.isInitialised()) { return; }
-
-    // Ensure that no tokens are currently highlighted. This may occur if, for example,
-    // a traced program is run twice.
-    removeHighlights();
 
     // Parse the first step in the trace to get started.
     TraceStep step;
@@ -41,15 +33,12 @@ TraceRunner::TraceRunner(QString tracefilePath, Graph* graph, QVector<Token*> pr
 
     // Now that the first step in the trace is prepared, update the program position
     // to highlight that first step.
-    updateProgramPosition(false);
+    TraceStep* firstStep = &(_traceSteps[0]);
+    _traceHighlighter.update(firstStep, FORWARDS);
 }
 
 Graph* TraceRunner::graph() {
     return _graph;
-}
-
-Token* TraceRunner::currentToken() {
-    return _tokenStack.top().token;
 }
 
 bool TraceRunner::isInitialised() {
@@ -127,7 +116,8 @@ bool TraceRunner::stepForward() {
     // We had to wait until after parsing a step to update the program position,
     // because if we had not yet parsed the next step, we would not know what
     // type of program token to search for.
-    updateProgramPosition(false);
+    TraceStep* nextStep = (_currentStep < _traceSteps.size()) ? &(_traceSteps[_currentStep]) : 0;
+    _traceHighlighter.update(nextStep, FORWARDS);
 
     return true;
 }
@@ -157,7 +147,8 @@ bool TraceRunner::stepBackward() {
 
     // Now update the program position to reflect that stepping forwards from
     // here will re-apply the step we just reverted.
-    updateProgramPosition(true);
+    TraceStep* nextStep = &(_traceSteps[_currentStep]);
+    _traceHighlighter.update(nextStep, BACKWARDS);
 
     // We are not parsing anything because any time we go backwards, we have
     // already parsed the steps before the current one. Therefore we will never
@@ -203,239 +194,6 @@ void TraceRunner::enterContext(TraceStep& context) {
 
 void TraceRunner::exitContext() {
     _contextStack.pop();
-}
-
-
-void TraceRunner::updateProgramPosition(bool backwards) {
-    // If we are currently pointing at a procedure call, move the highlight to
-    // the declaration of that procedure before searching for the next token.
-    // Since a procedure can be declared pretty much anywhere, we have to
-    // start the search at the beginning of the token vector.
-    if (_currentStep > 0) {
-        TraceStep& previousStep = _traceSteps[_currentStep - 1];
-        if (previousStep.type == PROCEDURE && !previousStep.endOfContext) {
-            int searchPos = 0;
-            while (searchPos < _programTokens.size()) {
-                Token* token = _programTokens[searchPos];
-                if (token->lexeme == ProgramLexeme_Declaration) {
-                    if (token->text == previousStep.contextName) {
-                        // To find the actual implementation of the procedure, we have to
-                        // look for the = sign after the name. When a procedure is
-                        // called, the token is still tagged as a declaration (presumably
-                        // to give procedure calls a different colour), and we don't want
-                        // to highlight a procedure call by mistake.
-                        Token* nextToken = _programTokens[searchPos + 1];
-                        if (nextToken->lexeme == ProgramLexeme_DeclarationOperator) {
-                            TokenReference foundToken;
-                            foundToken.token = token;
-                            foundToken.index = searchPos;
-
-                            // Since we will have to jump back to the call site, push the
-                            // token onto the stack rather than replacing it.
-                            pushHighlight(foundToken);
-                            break;
-                        }
-                    }
-                }
-
-                // Even if we're stepping backwards, we started the search at the
-                // beginning of the program, so we always move forwards.
-                searchPos += 1;
-            }
-        }
-    }
-
-    // We have to start the search at the currently highlighted token. However,
-    // if the token stack is empty, we have to start at the start or the end of
-    // the program tokens vector, because there is no current token.
-    int searchPos;
-    if (_tokenStack.empty()) {
-        searchPos = (backwards) ? (_programTokens.size() - 1) : 0;
-    }
-    else {
-        searchPos = (backwards) ? (_tokenStack.top().index - 1) : (_tokenStack.top().index + 1);
-    }
-
-    TokenReference foundToken;
-    foundToken.token = 0;
-    foundToken.index = -1;
-
-    // If we are at the end of the trace, unhighlight everything and return early.
-    if (_currentStep >= _traceSteps.size()) {
-        removeHighlights();
-        //_tokenStack.pop();
-
-        // Put a new TokenReference on the stack which is identical to the token
-        // that was highlighted at the end of the trace, but with the index
-        // increased by one. This means that if we now step backwards, we start
-        // the search in the correct place.
-        TokenReference previousToken = _tokenStack.pop();
-        TokenReference dummyToken;
-        dummyToken.token = previousToken.token;
-        dummyToken.index = previousToken.index + 1;
-        _tokenStack.push(dummyToken);
-
-        return;
-    }
-
-    // Get the current step so we can find it in the source text to highlight.
-    TraceStep& step = _traceSteps[_currentStep];
-
-    switch (step.type) {
-    case RULE_MATCH:
-    case RULE_MATCH_FAILED:
-    case RULE_APPLICATION:
-        // We do not need to update the program position for <match> or <apply>, since
-        // they are component parts of a rule in the source text.
-        break;
-
-    case RULE:
-    {
-        // Depending on the direction we are moving through the program, we need to
-        // either ignore the end of the context or the start of it. This is because
-        // a rule call is represented by a single token in the source code, so we
-        // don't need to move the highlight.
-        if (backwards != step.endOfContext) {
-            break;
-        }
-
-        // For some reason, rule names are prefixed with "Main_" by the compiler,
-        // so we need to remove that from the context name before searching for the
-        // correct token.
-        QString ruleName = step.contextName.remove("Main_");
-
-        while (searchPos >= 0 && searchPos < _programTokens.size()) {
-            Token* token = _programTokens[searchPos];
-            if (token->lexeme == ProgramLexeme_Identifier) {
-                if (token->text == ruleName) {
-                    foundToken.token = token;
-                    foundToken.index = searchPos;
-                    replaceCurrentHighlight(foundToken);
-                    break;
-                }
-            }
-
-            if (backwards) { searchPos -= 1; }
-            else           { searchPos += 1; }
-        }
-
-        break;
-    }
-
-    case RULE_SET:
-    {
-        // If this is the end of the context, we need to search for the
-        // closing brace instead of the opening one.
-        int lexeme = (step.endOfContext) ? ProgramLexeme_CloseBrace : ProgramLexeme_OpenBrace;
-
-        while (searchPos >= 0 && searchPos < _programTokens.size()) {
-            Token* token = _programTokens[searchPos];
-            if (token->lexeme == lexeme) {
-                foundToken.token = token;
-                foundToken.index = searchPos;
-                replaceCurrentHighlight(foundToken);
-                break;
-            }
-
-            if (backwards) { searchPos -= 1; }
-            else           { searchPos += 1; }
-        }
-
-        break;
-    }
-
-    case LOOP:
-    case LOOP_ITERATION:
-        break;
-
-    case PROCEDURE:
-    {
-        // If we are stepping forward and this is the end of the context, or
-        // we are stepping backwards and this is the start of the context, we
-        // simply pop the token stack to get back to the call site.
-        if (!backwards && step.endOfContext) {
-            popHighlight();
-            break;
-        }
-
-        while (searchPos >= 0 && searchPos < _programTokens.size()) {
-            Token* token = _programTokens[searchPos];
-            if (token->lexeme == ProgramLexeme_Declaration) {
-                if (token->text == step.contextName) {
-                    foundToken.token = token;
-                    foundToken.index = searchPos;
-                    replaceCurrentHighlight(foundToken);
-                    break;
-                }
-            }
-
-            if (backwards) { searchPos -= 1; }
-            else           { searchPos += 1; }
-        }
-
-        break;
-    }
-
-    case IF_CONTEXT:
-    case TRY_CONTEXT:
-    case BRANCH_CONDITION:
-    case THEN_BRANCH:
-    case ELSE_BRANCH:
-    case OR_CONTEXT:
-    case OR_LEFT:
-    case OR_RIGHT:
-    case SKIP:
-    case BREAK:
-    case FAIL:
-    case UNKNOWN:
-    default:
-        qDebug() << "Unhandled step of type" << step.type;
-        break;
-    }
-}
-
-
-void TraceRunner::replaceCurrentHighlight(TokenReference newToken) {
-    // Pop the top of the stack, and un-highlight that token.
-    if (!_tokenStack.empty()) {
-        TokenReference previous = _tokenStack.pop();
-        previous.token->emphasise = false;
-    }
-
-    // Highlight the new token, and push it onto the stack.
-    newToken.token->emphasise = true;
-    _tokenStack.push(newToken);
-}
-
-
-void TraceRunner::pushHighlight(TokenReference newToken) {
-    if (!_tokenStack.empty()) {
-        // Note we are *not* popping the stack here, just peeking.
-        TokenReference previous = _tokenStack.top();
-        previous.token->emphasise = false;
-    }
-
-    newToken.token->emphasise = true;
-    _tokenStack.push(newToken);
-}
-
-
-void TraceRunner::popHighlight() {
-    TokenReference topToken = _tokenStack.pop();
-    topToken.token->emphasise = false;
-
-    if (!_tokenStack.empty()) {
-        topToken = _tokenStack.top();
-        topToken.token->emphasise = true;
-    }
-}
-
-
-void TraceRunner::removeHighlights() {
-    for (int i = 0; i < _programTokens.size(); i++) {
-        Token* token = _programTokens[i];
-        token->emphasise = false;
-    }
 }
 
 

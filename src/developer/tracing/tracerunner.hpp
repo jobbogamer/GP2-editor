@@ -7,10 +7,9 @@
 #include <QStack>
 #include <boost/optional.hpp>
 #include "graph.hpp"
-#include "program.hpp"
 #include "tracestep.hpp"
 #include "traceparser.hpp"
-#include "token.hpp"
+#include "tracehighlighter.hpp"
 
 namespace Developer {
 
@@ -24,13 +23,6 @@ public:
      * will automatically be updated while stepping through the trace.
      */
     Graph* graph();
-
-    /**
-     * Returns a pointer to the Token object representing the current position
-     * in the program text. This should be used to perform text highlighting in
-     * the program source.
-     */
-    Token* currentToken();
 
     /**
      * Call this after using the constructor to check whether the TraceRunner
@@ -114,12 +106,11 @@ public:
 
 private:
     Graph* _graph;
-    QVector<Token*> _programTokens;
     TraceParser _traceParser;
+    TraceHighlighter _traceHighlighter;
     bool _initialised;
     QVector<TraceStep> _traceSteps;
     int _currentStep;
-    QStack<TokenReference> _tokenStack;
     QStack<TraceStepType> _contextStack;
     QString _error;
 
@@ -127,12 +118,6 @@ private:
     void exitContext();
     void applyCurrentStepChanges();
     void revertCurrentStepChanges();
-
-    void updateProgramPosition(bool backwards);
-    void replaceCurrentHighlight(TokenReference newToken);
-    void pushHighlight(TokenReference newToken);
-    void popHighlight();
-    void removeHighlights();
 };
 
 }
