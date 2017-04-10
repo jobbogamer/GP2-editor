@@ -216,7 +216,32 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
 
     case IF_CONTEXT:
     case TRY_CONTEXT:
+    {
+        // There's no end token, so we don't need to do anything if we reach
+        // the end of the context.
+        if (nextStep->endOfContext) { break; }
+
+        QString keyword = (nextStep->type == IF_CONTEXT) ? "if" : "try";
+
+        while (searchPos >= 0 && searchPos < _programTokens.size()) {
+            Token* token = _programTokens[searchPos];
+            if (token->lexeme == ProgramLexeme_Keyword && token->text == keyword) {
+                foundToken.token = token;
+                foundToken.index = searchPos;
+                replaceCurrentHighlight(foundToken);
+                break;
+            }
+
+            searchPos += (searchDirection == FORWARDS) ? 1 : -1;
+        }
+
+        break;
+    }
+
     case BRANCH_CONDITION:
+        // There are no tokens representing the condition context.
+        break;
+
     case THEN_BRANCH:
     case ELSE_BRANCH:
     case OR_CONTEXT:
