@@ -24,35 +24,64 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
     // Since a procedure can be declared pretty much anywhere, we have to
     // start the search at the beginning of the token vector.
     if (_currentStep && _currentStep->type == PROCEDURE) {
-        if (searchDirection == FORWARDS && !_currentStep->endOfContext) {
-            int searchPos = 0;
-            while (searchPos < _programTokens.size()) {
-                Token* token = _programTokens[searchPos];
-                if (token->lexeme == ProgramLexeme_Declaration) {
-                    if (token->text == _currentStep->contextName) {
-                        // To find the actual implementation of the procedure, we have to
-                        // look for the = sign after the name. When a procedure is
-                        // called, the token is still tagged as a declaration (presumably
-                        // to give procedure calls the same colour), and we don't want
-                        // to highlight a procedure call by mistake.
-                        Token* nextToken = _programTokens[searchPos + 1];
-                        if (nextToken->lexeme == ProgramLexeme_DeclarationOperator) {
-                            TokenReference foundToken;
-                            foundToken.token = token;
-                            foundToken.index = searchPos;
+        bool lookingForNext = false;
+        int searchPos = 0;
+        while (searchPos < _programTokens.size()) {
+            Token* token = _programTokens[searchPos];
+            if (token->lexeme == ProgramLexeme_Declaration) {
+                if ((token->text == _currentStep->contextName) || lookingForNext) {
+                    // To find the actual implementation of the procedure, we have to
+                    // look for the = sign after the name. When a procedure is
+                    // called, the token is still tagged as a declaration (presumably
+                    // to give procedure calls the same colour), and we don't want
+                    // to highlight a procedure call by mistake.
+                    Token* nextToken = _programTokens[searchPos + 1];
+                    if (nextToken->lexeme == ProgramLexeme_DeclarationOperator) {
+                        TokenReference foundToken;
+                        foundToken.token = token;
+                        foundToken.index = searchPos;
 
+                        if ((searchDirection == FORWARDS && !_currentStep->endOfContext) || lookingForNext) {
                             // Since we will have to jump back to the call site, push the
                             // token onto the stack rather than replacing it.
                             pushHighlight(foundToken);
+                            lookingForNext = false;
                             break;
+                        }
+                        else if (searchDirection == BACKWARDS && _currentStep->endOfContext) {
+                            // When we are searching backwards, we have to enter the
+                            // procedure at the end, not the beginning. Because the
+                            // only top level program structure in GP2 is procedure
+                            // delcarations, we can find the end of this procedure
+                            // by searching for the next procedure declaration in the
+                            // program. We set this flag to true, which signifies that
+                            // we don't care that the procedure name matches, we just
+                            // want to find the next procedure in the program, whatever
+                            // it may be. If we push that procedure declaration onto
+                            // the token stack, when we update the highlight for nextStep,
+                            // the search will start at the beginning of the next procedure
+                            // and work backwards, essentially entering this procedure from
+                            // the end.
+                            lookingForNext = true;
                         }
                     }
                 }
-
-                // Even if we're stepping backwards, we started the search at the
-                // beginning of the program, so we always move forwards.
-                searchPos += 1;
             }
+            // Even if we're stepping backwards, we started the search at the
+            // beginning of the program, so we always move forwards.
+            searchPos += 1;
+        }
+
+        if (lookingForNext) {
+            // We were looking for the next declaration, but we reached the end
+            // of the program before we found one, so put a dummy token on the
+            // stack, with the index set to the end of the program so that when
+            // we start searching below, the search starts at the end of the
+            // program, which we have determined is also the end of the procedure.
+            TokenReference dummyToken;
+            dummyToken.token = _programTokens.last();
+            dummyToken.index = _programTokens.size();
+            pushHighlight(dummyToken);
         }
     }
 
