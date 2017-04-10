@@ -8,7 +8,8 @@ namespace Developer {
 
 TraceHighlighter::TraceHighlighter(QVector<Token *> programTokens) :
     _programTokens(programTokens),
-    _tokenStack()
+    _tokenStack(),
+    _currentStep(0)
 {
     // When starting the trace, ensure no tokens are highlighted. A token may
     // be highlighted if this is not the first run of the traced program, since
