@@ -243,6 +243,96 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
         break;
 
     case THEN_BRANCH:
+    {
+        bool foundElse = false;
+        bool foundParens = false;
+        int unclosedParens = 0;
+        while (searchPos >= 0 && searchPos < _programTokens.size()) {
+            Token* token = _programTokens[searchPos];
+            if (nextStep->endOfContext) {
+                // If we're searching forward and this is the end of the context,
+                // we need to jump over the else branch, becuase that won't be
+                // executed.
+                if (searchDirection == FORWARDS) {
+                    // The else block is optional. Since we have reached the end
+                    // of the then block, either the next token (the current one)
+                    // is an else keyword, meaning we need to skip over the else
+                    // block, or it's not, meaning there's no else block and we
+                    // can just continue.
+                    if (token->lexeme == ProgramLexeme_Keyword && token->text == "else") {
+                        foundElse = true;
+                    }
+                    else {
+                        // If we didn't find an else, this is the next token after
+                        // the then block.
+                        if (!foundElse) {
+                            foundToken.token = token;
+                            foundToken.index = searchPos;
+                            replaceCurrentHighlight(foundToken);
+                            break;
+                        }
+                        else {
+                            // If there's a parenthesis after the else, keep going
+                            // until we reach the end of the block.
+                            if (token->lexeme == ProgramLexeme_OpenParen) {
+                                unclosedParens += 1;
+                                foundParens = true;
+                            }
+                            else if (token->lexeme == ProgramLexeme_CloseParen) {
+                                unclosedParens -= 1;
+                            }
+
+                            // Once all the unclosed parentheses are closed (including
+                            // the situation where there were none opened in the first
+                            // place), we have reached the end of the else block.
+                            if (unclosedParens == 0) {
+                                // If we didn't find any parentheses, we should move
+                                // forward by one more token, because otherwise we're
+                                // highlighting the token in the else block.
+                                if (!foundParens) {
+                                    if (searchPos < _programTokens.size() - 1) {
+                                        searchPos += 1;
+                                        token = _programTokens[searchPos];
+                                    }
+                                    else {
+                                        // There are no more tokens, don't try to
+                                        // highlight anything.
+                                        break;
+                                    }
+                                }
+
+                                foundToken.token = token;
+                                foundToken.index = searchPos;
+                                replaceCurrentHighlight(foundToken);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // If it's the end of the context and we're searching backwards,
+                // try to find an else keyword. However, the else block is optional.
+                if (searchDirection == BACKWARDS) {
+                    break;
+                }
+            }
+
+            // If this is the start of the context, we just need to find the keyword "then".
+            if (!nextStep->endOfContext) {
+                if (token->lexeme == ProgramLexeme_Keyword && token->text == "then") {
+                    foundToken.token = token;
+                    foundToken.index = searchPos;
+                    replaceCurrentHighlight(foundToken);
+                    break;
+                }
+            }
+
+            searchPos += (searchDirection == FORWARDS) ? 1 : -1;
+        }
+
+        break;
+    }
+
     case ELSE_BRANCH:
     case OR_CONTEXT:
     case OR_LEFT:
