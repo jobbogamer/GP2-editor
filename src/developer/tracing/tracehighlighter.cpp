@@ -425,6 +425,8 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
                 replaceCurrentHighlight(foundToken);
                 break;
             }
+
+            searchPos += (searchDirection == FORWARDS) ? 1 : -1;
         }
 
         break;
