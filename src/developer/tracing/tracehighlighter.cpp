@@ -247,6 +247,13 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
         bool foundElse = false;
         bool foundParens = false;
         int unclosedParens = 0;
+
+        // This token will be used in the case where we are searching backwards and
+        // there isn't an else block in the if statement.
+        TokenReference endOfBlock;
+        endOfBlock.token = 0;
+        endOfBlock.index = -1;
+
         while (searchPos >= 0 && searchPos < _programTokens.size()) {
             Token* token = _programTokens[searchPos];
             if (nextStep->endOfContext) {
@@ -313,7 +320,41 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
                 // If it's the end of the context and we're searching backwards,
                 // try to find an else keyword. However, the else block is optional.
                 if (searchDirection == BACKWARDS) {
-                    break;
+                    // We assume this is the end of a block, but we don't yet know
+                    // if it's the else block or the then block (since else is optional)
+                    // so we'll store the pointer to this token, just in case we need
+                    // to come back here.
+                    if (endOfBlock.index == -1) {
+                        endOfBlock.token = token;
+                        endOfBlock.index = searchPos;
+                    }
+
+                    if (token->lexeme == ProgramLexeme_CloseParen) {
+                        unclosedParens += 1;
+                        foundParens = true;
+                    }
+                    else if (token->lexeme == ProgramLexeme_OpenParen) {
+                        unclosedParens -= 1;
+                    }
+
+                    // If we have closed any opened parentheses, check for the else
+                    // or then keyword.
+                    if (unclosedParens == 0) {
+                        if (token->lexeme == ProgramLexeme_Keyword) {
+                            if (token->text == "else") {
+                                foundToken.token = token;
+                                foundToken.index = searchPos;
+                                replaceCurrentHighlight(foundToken);
+                                break;
+                            }
+                            else if (token->text == "then") {
+                                // There wasn't an else block, so reset back to the
+                                // token reference we stored earlier.
+                                replaceCurrentHighlight(endOfBlock);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
