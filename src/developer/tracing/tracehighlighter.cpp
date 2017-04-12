@@ -239,7 +239,35 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
     }
 
     case BRANCH_CONDITION:
-        // There are no tokens representing the condition context.
+        // There are no tokens representing the condition context. However, if we are
+        // searching backwards and we just came from an else block, we need to jump
+        // over the then block if we executed the else).
+        if (searchDirection == BACKWARDS && nextStep->endOfContext) {
+            if (_currentStep->type == ELSE_BRANCH) {
+                int unclosedParens = 0;
+                while (searchPos >= 0 && searchPos < _programTokens.size()) {
+                    Token* token = _programTokens[searchPos];
+
+                    if (token->lexeme == ProgramLexeme_CloseParen) {
+                        unclosedParens += 1;
+                    }
+                    else if (token->lexeme == ProgramLexeme_OpenParen) {
+                        unclosedParens -= 1;
+                    }
+
+                    if (unclosedParens == 0) {
+                        if (token->lexeme == ProgramLexeme_Keyword && token->text == "then") {
+                            foundToken.token = token;
+                            foundToken.index = searchPos;
+                            replaceCurrentHighlight(foundToken);
+                            break;
+                        }
+                    }
+
+                    searchPos += (searchDirection == FORWARDS) ? 1 : -1;
+                }
+            }
+        }
         break;
 
     case THEN_BRANCH:
