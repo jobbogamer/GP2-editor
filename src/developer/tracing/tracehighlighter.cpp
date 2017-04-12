@@ -378,9 +378,30 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
     case OR_CONTEXT:
     case OR_LEFT:
     case OR_RIGHT:
-    case SKIP:
+        break;
+
+    case SKIP:   
     case BREAK:
     case FAIL:
+    {
+        QString keyword;
+        if      (nextStep->type == SKIP)  { keyword = "skip"; }
+        else if (nextStep->type == BREAK) { keyword = "break"; }
+        else                              { keyword = "fail"; }
+
+        while (searchPos > 0 && searchPos < _programTokens.size()) {
+            Token* token = _programTokens[searchPos];
+            if (token->lexeme == ProgramLexeme_Keyword && token->text == keyword) {
+                foundToken.token = token;
+                foundToken.index = searchPos;
+                replaceCurrentHighlight(foundToken);
+                break;
+            }
+        }
+
+        break;
+    }
+
     case UNKNOWN:
     default:
         qDebug() << "Unhandled step of type" << nextStep->type;
