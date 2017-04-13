@@ -403,19 +403,137 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
     }
 
     case ELSE_BRANCH:
+    {
+        // If this is a virtual else, don't do anything, unless we are going
+        // backwards. In that case, highlight whatever the current searchPos is
+        // because it will be a separator.
+        if (nextStep->virtualStep) {
+            if (searchDirection == BACKWARDS && nextStep->endOfContext) {
+                foundToken.token = _programTokens[searchPos];
+                foundToken.index = searchPos;
+                replaceCurrentHighlight(foundToken);
+            }
+            break;
+        }
+
+        // There's no end token for an else branch. However, if we're searching
+        // forwards and the previous step was a virtual step, mark this step as
+        // virtual as well.
+        if (nextStep->endOfContext) {
+            if (searchDirection == FORWARDS && _currentStep->virtualStep) {
+                nextStep->virtualStep = true;
+            }
+            break;
+        }
+
+        // The else block is optional, but we will find ourselves here anyway in
+        // an else-less if statement because the compiler adds an else statement
+        // which only contains a skip. However, it's perfectly valid for the user
+        // to create their own else block which only contains a skip! The current
+        // token will be at the end of the condition, so the next keyword will be
+        // "then". We can then keep searching until we find the end of the then
+        // block. Once we reach the end of that block, if the next token is "else"
+        // we can continue as normal. If not, we will have to keep the highlight
+        // at the end of the then block.
+        int unclosedParens = 0;
+        bool foundThen = false;
+        bool foundParens = false;
+        while (searchPos >= 0 && searchPos < _programTokens.size()) {
+            Token* token = _programTokens[searchPos];
+
+            // If we're searching backwards, and we know that the else isn't
+            // virtual (because we would have exited early above), we can
+            // just look for the else keyword.
+            if (searchDirection == BACKWARDS) {
+                if (token->lexeme == ProgramLexeme_Keyword && token->text == "else") {
+                    foundToken.token = token;
+                    foundToken.index = searchPos;
+                    replaceCurrentHighlight(foundToken);
+                    break;
+                }
+            }
+
+            if (searchDirection == FORWARDS) {
+                if (foundThen) {
+                    if (token->lexeme == ProgramLexeme_OpenParen) {
+                        unclosedParens += 1;
+                        foundParens = true;
+                    }
+                    else if (token->lexeme == ProgramLexeme_CloseParen) {
+                        unclosedParens -= 1;
+                    }
+
+                    if (unclosedParens == 0) {
+                        if (searchPos < _programTokens.size() - 1) {
+                            Token* nextToken = _programTokens[searchPos + 1];
+                            foundToken.token = nextToken;
+                            foundToken.index = searchPos + 1;
+                            replaceCurrentHighlight(foundToken);
+
+                            if (! (nextToken->lexeme == ProgramLexeme_Keyword && nextToken->text == "else")) {
+                                nextStep->virtualStep = true;
+                            }
+
+                            break;
+                        }
+                        else {
+                            // The if statement is at the end of the program, and there
+                            // is no else block, so do nothing.
+                            nextStep->virtualStep = true;
+                            break;
+                        }
+                    }
+                }
+                else if (token->lexeme == ProgramLexeme_Keyword && token->text == "then") {
+                    foundThen = true;
+                }
+            }
+
+            searchPos += (searchDirection == FORWARDS) ? 1 : -1;
+        }
+
+        break;
+    }
+
+
     case OR_CONTEXT:
     case OR_LEFT:
     case OR_RIGHT:
         break;
 
-    case SKIP:   
+    case SKIP:
+    {
+        // If this step is virtual, do nothing.
+        if (nextStep->virtualStep) {
+            break;
+        }
+
+        // If the previous step was virtual, i.e. it was an else context without
+        // a real else block in the program, mark this skip as virtual.
+        if (searchDirection == FORWARDS && _currentStep->virtualStep) {
+            nextStep->virtualStep = true;
+            break;
+        }
+
+        while (searchPos > 0 && searchPos < _programTokens.size()) {
+            Token* token = _programTokens[searchPos];
+            if (token->lexeme == ProgramLexeme_Keyword && token->text == "skip") {
+                foundToken.token = token;
+                foundToken.index = searchPos;
+                replaceCurrentHighlight(foundToken);
+                break;
+            }
+
+            searchPos += (searchDirection == FORWARDS) ? 1 : -1;
+        }
+
+        break;
+    }
+
     case BREAK:
     case FAIL:
     {
-        QString keyword;
-        if      (nextStep->type == SKIP)  { keyword = "skip"; }
-        else if (nextStep->type == BREAK) { keyword = "break"; }
-        else                              { keyword = "fail"; }
+        QString keyword = (nextStep->type == BREAK) ? "break" : "fail";
 
         while (searchPos > 0 && searchPos < _programTokens.size()) {
             Token* token = _programTokens[searchPos];
