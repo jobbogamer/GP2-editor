@@ -500,9 +500,154 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
 
 
     case OR_CONTEXT:
+    {
+        // Since there are no markers at either end of an or context, just highlight
+        // whatever the next token is. It will always be either a separator, a
+        // parenthesis, or the = operator.
+        if (searchPos >= 0 && searchPos < _programTokens.size()) {
+            Token* token = _programTokens[searchPos];
+            foundToken.token = token;
+            foundToken.index = searchPos;
+            replaceCurrentHighlight(foundToken);
+            break;
+        }
+
+        // If we are at the end of the program, use a dummy token instead.
+        else {
+            foundToken.token = _tokenStack.top().token;
+            foundToken.index = _programTokens.size();
+            replaceCurrentHighlight(foundToken);
+            break;
+        }
+    }
+
     case OR_LEFT:
-    case OR_RIGHT:
+    {
+        // If this is the start of the context, there is nothing to do, since
+        // there is no marker for the start of the left branch of an or statement.
+        if (!nextStep->endOfContext) { break; }
+
+        // If it's the end of the context, we need to jump over the right branch.
+        // We do this by finding the "or" keyword. If we are going backwards, we
+        // need to wait until we have seen the entire right branch of the or, by
+        // looking for parentheses.
+        // In the forward case, we need to find the "or" keyword and *then* wait
+        // until we have seen the right branch.
+        bool foundOr = false;
+        bool foundParens = false;
+        int unmatchedParens = 0;
+        while (searchPos >= 0 && searchPos < _programTokens.size()) {
+            Token* token = _programTokens[searchPos];
+
+            if (searchDirection == FORWARDS) {
+                if (foundOr) {
+                    if (token->lexeme == ProgramLexeme_OpenParen) {
+                        unmatchedParens += 1;
+                        foundParens = true;
+                    }
+                    else if (token->lexeme == ProgramLexeme_CloseParen) {
+                        unmatchedParens -= 1;
+                    }
+
+                    if (unmatchedParens == 0) {
+                        // If we aren't at the end of the program, and we didn't
+                        // find parentheses, move forward one extra token, so that
+                        // we are highlighting the separator token, not the token
+                        // in the right branch.
+                        if (!foundParens) {
+                            if (searchPos < _programTokens.size() - 1) {
+                                Token* nextToken = _programTokens[searchPos + 1];
+                                foundToken.token = nextToken;
+                                foundToken.index = searchPos + 1;
+                                replaceCurrentHighlight(foundToken);
+                                break;
+                            }
+                        }
+                        else {
+                            foundToken.token = token;
+                            foundToken.index = searchPos;
+                            replaceCurrentHighlight(foundToken);
+                            break;
+                        }
+                    }
+                }
+                else if (token->lexeme == ProgramLexeme_Keyword && token->text == "or") {
+                    foundOr = true;
+                }
+            }
+
+            if (searchDirection == BACKWARDS) {
+                if (token->lexeme == ProgramLexeme_CloseParen) {
+                    unmatchedParens += 1;
+                    foundParens = true;
+                }
+                else if (token->lexeme == ProgramLexeme_OpenParen) {
+                    unmatchedParens -= 1;
+                }
+
+                if (unmatchedParens == 0) {
+                    if (token->lexeme == ProgramLexeme_Keyword && token->text == "or") {
+                        foundToken.token = token;
+                        foundToken.index = searchPos;
+                        replaceCurrentHighlight(foundToken);
+                        break;
+                    }
+                }
+            }
+
+            searchPos += (searchDirection == FORWARDS) ? 1 : -1;
+        }
+
         break;
+    }
+
+    case OR_RIGHT:
+    {
+        // If this is the end of the context, there is nothing to do, since
+        // there is no marker for the end of the right branch of an or statement.
+        if (nextStep->endOfContext) { break; }
+
+        int unmatchedParens = 0;
+        while (searchPos >= 0 && searchPos < _programTokens.size()) {
+            Token* token = _programTokens[searchPos];
+
+            // If we are searching backwards, we can simply look for the "or"
+            // keyword, since we do not have to jump over anything.
+            if (searchDirection == BACKWARDS) {
+                if (token->lexeme == ProgramLexeme_Keyword && token->text == "or") {
+                    foundToken.token = token;
+                    foundToken.index = searchPos;
+                    replaceCurrentHighlight(foundToken);
+                    break;
+                }
+            }
+
+            // If we are searching forwards, we need to jump over the left branch,
+            // by looking for a full block (either a single token or a matched set
+            // of parentheses).
+            if (searchDirection == FORWARDS) {
+                if (token->lexeme == ProgramLexeme_OpenParen) {
+                    unmatchedParens += 1;
+                }
+                else if (token->lexeme == ProgramLexeme_CloseParen) {
+                    unmatchedParens -= 1;
+                }
+
+                if (unmatchedParens == 0) {
+                    if (token->lexeme == ProgramLexeme_Keyword && token->text == "or") {
+                        foundToken.token = token;
+                        foundToken.index = searchPos;
+                        replaceCurrentHighlight(foundToken);
+                        break;
+                    }
+                }
+            }
+
+            searchPos += (searchDirection == FORWARDS) ? 1 : -1;
+        }
+
+        break;
+    }
 
     case SKIP:
     {
