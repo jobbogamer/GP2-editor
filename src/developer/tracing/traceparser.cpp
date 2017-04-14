@@ -74,6 +74,7 @@ bool TraceParser::parseStep(TraceStep *step) {
     // Set sensible defaults.
     step->contextName = "";
     step->endOfContext = false;
+    step->virtualStep = false;
     step->type = UNKNOWN;
 
     // We always want to parse one step, no matter how much irrelevant XML

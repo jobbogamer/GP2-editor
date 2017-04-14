@@ -239,6 +239,7 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
     }
 
     case BRANCH_CONDITION:
+    {
         // There are no tokens representing the condition context. However, if we are
         // searching backwards and we just came from an else block, we need to jump
         // over the then block if we executed the else).
@@ -268,7 +269,9 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
                 }
             }
         }
+
         break;
+    }
 
     case THEN_BRANCH:
     {
