@@ -68,6 +68,7 @@ struct TraceStep {
     TraceStepType type;
     QString contextName;
     bool endOfContext;
+    bool loopBoundary;
     bool virtualStep;
     QVector<GraphChange> graphChanges;
 };

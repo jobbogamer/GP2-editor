@@ -183,8 +183,67 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
     }
 
     case LOOP:
-    case LOOP_ITERATION:
+    {
+        // At the start of a loop, get the next token after the previously
+        // highlighted one, which will be a separator or a parenthesis,
+        // and higlight it. We do this so that we can jump back to the
+        // start of the loop if there's another iteration.
+        // There must be a token after the current one, because we cannot be
+        // starting a loop at the last token.
+        if (searchDirection == FORWARDS && !nextStep->endOfContext) {
+            Token* token = _programTokens[searchPos];
+            foundToken.token = token;
+            foundToken.index = searchPos;
+            replaceCurrentHighlight(foundToken);
+            break;
+        }
+
+        // At the end of a loop, look for the ! symbol.
+        if (nextStep->endOfContext) {
+            while (searchPos >= 0 && searchPos < _programTokens.size()) {
+                Token* token = _programTokens[searchPos];
+                if (token->lexeme == ProgramLexeme_Repeat) {
+                    foundToken.token = token;
+                    foundToken.index = searchPos;
+                    replaceCurrentHighlight(foundToken);
+                    break;
+                }
+
+                searchPos += (searchDirection == FORWARDS) ? 1 : -1;
+            }
+        }
+
         break;
+    }
+
+    case LOOP_ITERATION:
+    {
+        // At the start of a loop iteration, get the current top of the highlight
+        // stack (the start of the loop), and push a copy onto the top of the stack,
+        // so that we can pop it at the end of the iteration to return here.
+        if ((searchDirection == FORWARDS && !nextStep->endOfContext) ||
+            (searchDirection == BACKWARDS && nextStep->endOfContext)) {
+            TokenReference highlighted = _tokenStack.top();
+            pushHighlight(highlighted);
+            break;
+        }
+
+        // At the end of a loop iteration, we want to pop the highlight
+        // stack ready for the next iteration.
+        if (!nextStep->loopBoundary) {
+            popHighlight();
+            break;
+        }
+
+        // If this is the boundary of the loop, we want to get the current
+        // highlighted token, pop the token stack, and then re-highlight the
+        // previous one.
+        TokenReference highlighted = _tokenStack.top();
+        popHighlight();
+        replaceCurrentHighlight(highlighted);
+
+        break;
+    }
 
     case PROCEDURE:
     {

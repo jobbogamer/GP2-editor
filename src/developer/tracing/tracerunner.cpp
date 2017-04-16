@@ -105,7 +105,30 @@ bool TraceRunner::stepForward() {
         bool validStep = _traceParser.parseStep(&step);
         if (!_traceParser.isParseComplete()) {
             if (validStep) {
+                // If this is the start of a loop iteration and the previous step
+                // was the start of the loop, set the loopBoundary flag.
+                // Do this before pushing the new step, so that _traceSteps.last()
+                // returns what we want.
+                if (step.type == LOOP_ITERATION && !step.endOfContext) {
+                    TraceStep& previousStep = _traceSteps.last();
+                    if (previousStep.type == LOOP) {
+                        step.loopBoundary = true;
+                    }
+                }
+
                 _traceSteps.push_back(step);
+
+                // If this is the end of a loop, set the loopBoundary flag on the
+                // previous end of iteration.
+                if (step.type == LOOP && step.endOfContext) {
+                    for (int i = _traceSteps.size() - 1; i >= 0; i--) {
+                        TraceStep& previousStep = _traceSteps[i];
+                        if (previousStep.type == LOOP_ITERATION && previousStep.endOfContext) {
+                            previousStep.loopBoundary = true;
+                            break;
+                        }
+                    }
+                }
             }
             else {
                 return false;

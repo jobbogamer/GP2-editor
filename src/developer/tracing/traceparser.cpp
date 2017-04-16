@@ -74,6 +74,7 @@ bool TraceParser::parseStep(TraceStep *step) {
     // Set sensible defaults.
     step->contextName = "";
     step->endOfContext = false;
+    step->loopBoundary = false;
     step->virtualStep = false;
     step->type = UNKNOWN;
 
