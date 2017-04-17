@@ -10,6 +10,7 @@
 #include "tracestep.hpp"
 #include "traceparser.hpp"
 #include "tracehighlighter.hpp"
+#include "graphsnapshot.hpp"
 
 namespace Developer {
 
@@ -112,10 +113,15 @@ private:
     QVector<TraceStep> _traceSteps;
     int _currentStep;
     QStack<TraceStepType> _contextStack;
+    QStack<GraphSnapshot> _snapshotStack;
     QString _error;
 
     void enterContext(TraceStep& context);
     void exitContext();
+
+    void takeSnapshot();
+    void restoreSnapshot();
+
     void applyCurrentStepChanges();
     void revertCurrentStepChanges();
 };

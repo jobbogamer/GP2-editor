@@ -87,11 +87,14 @@ bool TraceRunner::stepForward() {
     if (step.type == RULE_APPLICATION) {
         applyCurrentStepChanges();
     }
-    else if (step.endOfContext) {
-        exitContext();
-    }
-    else {
-        enterContext(step);
+    // We don't want to treat rule matches as contexts.
+    else if (! (step.type == RULE_MATCH || step.type == RULE_MATCH_FAILED)) {
+        if (step.endOfContext) {
+            exitContext();
+        }
+        else {
+            enterContext(step);
+        }
     }
 
     // Move on to the next step.
@@ -211,12 +214,120 @@ bool TraceRunner::goToStart() {
 
 
 void TraceRunner::enterContext(TraceStep& context) {
+    // If we are entering an if, try, or loop iteration context, we want to store
+    // a snapshot of the current graph, so that we can restore it if necessary.
+    // We will need to restore it at the end of the condition context (for an if),
+    // at the start of the else context (for a try), or if something in the loop
+    // body fails (for a loop).
+    if (context.type == IF_CONTEXT || context.type == TRY_CONTEXT || context.type == LOOP_ITERATION) {
+        takeSnapshot();
+    }
+
+    // If we are entering a then context and the previous context was an if context,
+    // we need to restore the snapshot.
+    if (context.type == THEN_BRANCH) {
+        TraceStepType previousContext = _contextStack.top();
+        if (previousContext == IF_CONTEXT) {
+            restoreSnapshot();
+        }
+
+        // If the previous context was a try, we still need to pop the snapshot off the
+        // stack, but we don't want to apply it, because the then branch of a try does
+        // not revert changes.
+        if (previousContext == TRY_CONTEXT) {
+            _snapshotStack.pop();
+        }
+    }
+
+    // If we are entering an else context, we need to restore the snapshot. (This is
+    // true for both if and try contexts).
+    if (context.type == ELSE_BRANCH) {
+        restoreSnapshot();
+    }
+
     _contextStack.push(context.type);
 }
 
 
 void TraceRunner::exitContext() {
     _contextStack.pop();
+}
+
+
+void TraceRunner::takeSnapshot() {
+    GraphSnapshot snapshot;
+    std::vector<Node*> nodes = _graph->nodes();
+    std::vector<Edge*> edges = _graph->edges();
+
+    for (size_t i = 0; i < nodes.size(); i++) {
+        SnapshotNode copy;
+        Node* node = nodes[i];
+
+        copy.id = node->id();
+        copy.label = node->label();
+        copy.mark = node->mark();
+        copy.isRoot = node->isRoot();
+        copy.pos = node->pos();
+
+        snapshot.nodes.push_back(copy);
+    }
+
+    for (size_t i = 0; i < edges.size(); i++) {
+        SnapshotEdge copy;
+        Edge* edge = edges[i];
+
+        copy.id = edge->id();
+        copy.label = edge->label();
+        copy.mark = edge->mark();
+        copy.from = edge->from()->id();
+        copy.to = edge->to()->id();
+
+        snapshot.edges.push_back(copy);
+    }
+
+    _snapshotStack.push(snapshot);
+}
+
+
+void TraceRunner::restoreSnapshot() {
+    GraphSnapshot snapshot = _snapshotStack.pop();
+
+    // Remove all nodes and edges from the current graph.
+    std::vector<Node*> oldNodes = _graph->nodes();
+    std::vector<Edge*> oldEdges = _graph->edges();
+
+    for (size_t i = 0; i < oldEdges.size(); i++) {
+        _graph->removeEdge(oldEdges[i]->id());
+    }
+
+    for (size_t i = 0; i < oldNodes.size(); i++) {
+        _graph->removeNode(oldNodes[i]->id());
+    }
+
+    // And add all the nodes and edges from the snapshot.
+    std::vector<SnapshotNode> newNodes = snapshot.nodes;
+    std::vector<SnapshotEdge> newEdges = snapshot.edges;
+
+    for (size_t i = 0; i < newNodes.size(); i++) {
+        SnapshotNode node = newNodes[i];
+        _graph->addNode(node.id,
+                        node.label,
+                        node.mark,
+                        node.isRoot,
+                        false,
+                        node.pos);
+    }
+
+    for (size_t i = 0; i < newEdges.size(); i++) {
+        SnapshotEdge edge = newEdges[i];
+        Node* from = _graph->node(edge.from);
+        Node* to = _graph->node(edge.to);
+        _graph->addEdge(edge.id,
+                        from,
+                        to,
+                        edge.label,
+                        edge.mark);
+    }
 }
 
 
