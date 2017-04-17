@@ -722,7 +722,7 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
             break;
         }
 
-        while (searchPos > 0 && searchPos < _programTokens.size()) {
+        while (searchPos >= 0 && searchPos < _programTokens.size()) {
             Token* token = _programTokens[searchPos];
             if (token->lexeme == ProgramLexeme_Keyword && token->text == "skip") {
                 foundToken.token = token;
@@ -742,7 +742,7 @@ void TraceHighlighter::update(TraceStep *nextStep, TraceDirection searchDirectio
     {
         QString keyword = (nextStep->type == BREAK) ? "break" : "fail";
 
-        while (searchPos > 0 && searchPos < _programTokens.size()) {
+        while (searchPos >= 0 && searchPos < _programTokens.size()) {
             Token* token = _programTokens[searchPos];
             if (token->lexeme == ProgramLexeme_Keyword && token->text == keyword) {
                 foundToken.token = token;
