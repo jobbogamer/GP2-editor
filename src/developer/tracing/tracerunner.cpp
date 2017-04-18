@@ -15,6 +15,8 @@ TraceRunner::TraceRunner(QString tracefilePath, Graph* graph, QVector<Token*> pr
     _traceSteps(),
     _currentStep(-1),
     _contextStack(),
+    _snapshotStack(),
+    _loopSuccessStack(),
     _error()
 {
     // Check that the TraceParser was initialised successfully.
@@ -89,6 +91,39 @@ bool TraceRunner::stepForward() {
     _infoBarMessage = "";
 
     TraceStep& step = _traceSteps[_currentStep];
+
+    // If this is the end of a rule context, check whether the previous step was a
+    // failed rule match. If it was, we need to check if we're in a loop, because
+    // that means we need to revert to the previous graph snapshot.
+    if (step.type == RULE && step.endOfContext) {
+        TraceStep& previousStep = _traceSteps[_currentStep - 1];
+        if (previousStep.type == RULE_MATCH_FAILED) {
+            // The only time we *don't* want to restore the snapshot in a loop is
+            // if we are in a branch condition inside a loop, because failure in
+            // there does not count as failing the loop. So we search down the context
+            // stack, and if we reach a loop iteration context *before* reaching a
+            // branch condition context, we restore the snapshot. Otherwise, we just
+            // pop the snapshot without applying it.
+            bool foundBranch = false;
+            bool foundLoop = false;
+            QStack<TraceStepType> stackCopy = _contextStack;
+            while (!stackCopy.empty() && !foundLoop) {
+                TraceStepType contextType = stackCopy.pop();
+                foundBranch = (contextType == BRANCH_CONDITION) || foundBranch;
+                foundLoop = (contextType == LOOP_ITERATION);
+            }
+
+            if (foundLoop && !foundBranch) {
+                restoreSnapshot();
+                _infoBarMessage = "Graph has been reverted to the previous snapshot.";
+
+                // Mark the current loop as failed.
+                _loopSuccessStack.pop();
+                _loopSuccessStack.push(false);
+            }
+        }
+    }
+
     if (step.type == RULE_APPLICATION) {
         applyCurrentStepChanges();
     }
@@ -97,7 +132,7 @@ bool TraceRunner::stepForward() {
         // is not stored in the match step, so we have to go back one step to get
         // the RULE context.
         TraceStep& previousStep = _traceSteps[_currentStep - 1];
-        _infoBarMessage = "No match found for rule " + previousStep.contextName + ".";
+        _infoBarMessage = "No match found for rule " + previousStep.contextName + ".";        
     }
     // We don't want to treat rule matches as contexts.
     else if (step.type != RULE_MATCH) {
@@ -250,6 +285,9 @@ void TraceRunner::enterContext(TraceStep& context) {
         }
         else {
             _infoBarMessage += "if a rule in the loop fails.";
+
+            // Assume that this loop iteration will succeed.
+            _loopSuccessStack.push(true);
         }
     }
 
@@ -282,7 +320,18 @@ void TraceRunner::enterContext(TraceStep& context) {
 
 
 void TraceRunner::exitContext() {
-    _contextStack.pop();
+    TraceStepType contextType = _contextStack.pop();
+
+    // If we are exiting a loop iteration, we need to check whether to pop a snapshot
+    // off the stack. We need to do this in the case no rules failed during the entire
+    // loop iteration. If the loop failed, we will have already restored a snapshot,
+    // so there's nothing to do.
+    if (contextType == LOOP_ITERATION) {
+        bool loopSuccess = _loopSuccessStack.pop();
+        if (loopSuccess) {
+            _snapshotStack.pop();
+        }
+    }
 }
 
 

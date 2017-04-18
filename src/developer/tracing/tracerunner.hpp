@@ -119,6 +119,7 @@ private:
     int _currentStep;
     QStack<TraceStepType> _contextStack;
     QStack<GraphSnapshot> _snapshotStack;
+    QStack<bool> _loopSuccessStack;
     QString _infoBarMessage;
     QString _error;
 
