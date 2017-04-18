@@ -101,6 +101,11 @@ public:
     void applyMatch();
 
     /**
+     * Return a string informing the user about the current state of the trace.
+     */
+    QString getInfoBarMessage();
+
+    /**
      * Return any error that has occurred during tracing.
      */
     QString getError();
@@ -114,6 +119,7 @@ private:
     int _currentStep;
     QStack<TraceStepType> _contextStack;
     QStack<GraphSnapshot> _snapshotStack;
+    QString _infoBarMessage;
     QString _error;
 
     void enterContext(TraceStep& context);

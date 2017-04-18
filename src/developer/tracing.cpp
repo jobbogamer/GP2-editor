@@ -167,6 +167,9 @@ void Tracing::updateUI() {
     // Update the program and graph views.
     _ui->graphView->setGraph(_traceRunner->graph());
     _ui->programView->highlighter()->rehighlight();
+
+    // Update the info bar.
+    _ui->infoBar->setText(_traceRunner->getInfoBarMessage());
 }
 
 /**

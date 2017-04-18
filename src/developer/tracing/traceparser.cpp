@@ -170,7 +170,6 @@ bool TraceParser::parseStartElement(TraceStep *step) {
 
         // Keep parsing until the </match> end element is found, to get the nodes
         // and edges from the rule match (if there are any).
-        step->type = RULE_MATCH;
         tokenType = _xml->readNext();
         while (! (tokenType == QXmlStreamReader::EndElement && _xml->name() == "match") ) {
             // Stop if an invalid element is reached.

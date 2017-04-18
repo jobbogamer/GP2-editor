@@ -83,12 +83,24 @@ bool TraceRunner::stepForward() {
         return false;
     }
 
+    // Remove the message from the info bar, since it will no longer be relevant
+    // once we move on to the next step. If there is a message related to the next
+    // step, it will be set below.
+    _infoBarMessage = "";
+
     TraceStep& step = _traceSteps[_currentStep];
     if (step.type == RULE_APPLICATION) {
         applyCurrentStepChanges();
     }
+    else if (step.type == RULE_MATCH_FAILED) {
+        // We want to tell the user that the rule failed to match. The rule name
+        // is not stored in the match step, so we have to go back one step to get
+        // the RULE context.
+        TraceStep& previousStep = _traceSteps[_currentStep - 1];
+        _infoBarMessage = "No match found for rule " + previousStep.contextName + ".";
+    }
     // We don't want to treat rule matches as contexts.
-    else if (! (step.type == RULE_MATCH || step.type == RULE_MATCH_FAILED)) {
+    else if (step.type != RULE_MATCH) {
         if (step.endOfContext) {
             exitContext();
         }
@@ -637,6 +649,12 @@ void TraceRunner::revertCurrentStepChanges() {
         }
     }
 }
+
+
+QString TraceRunner::getInfoBarMessage() {
+    return _infoBarMessage;
+}
+
 
 QString TraceRunner::getError() {
     if (_traceParser.hasError()) {
