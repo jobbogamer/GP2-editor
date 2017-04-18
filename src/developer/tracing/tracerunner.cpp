@@ -167,6 +167,11 @@ bool TraceRunner::stepBackward() {
         return false;
     }
 
+    // Remove the message from the info bar, since it will no longer be relevant
+    // once we move on to the next step. If there is a message related to the next
+    // step, it will be set below.
+    _infoBarMessage = "";
+
     // Move current step position backwards, then revert the changes. We have to
     // move before reverting because the "current step" refers to the step which
     // will be *applied* if stepForward() is called.
@@ -176,11 +181,13 @@ bool TraceRunner::stepBackward() {
     if (step.type == RULE_APPLICATION) {
         revertCurrentStepChanges();
     }
-    else if (step.endOfContext) {
-        enterContext(step);
-    }
-    else {
-        exitContext();
+    else if (step.type != RULE_MATCH && step.type != RULE_MATCH_FAILED) {
+        if (step.endOfContext) {
+            enterContext(step);
+        }
+        else {
+            exitContext();
+        }
     }
 
     // Now update the program position to reflect that stepping forwards from
