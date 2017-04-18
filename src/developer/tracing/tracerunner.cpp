@@ -233,6 +233,17 @@ void TraceRunner::enterContext(TraceStep& context) {
     // body fails (for a loop).
     if (context.type == IF_CONTEXT || context.type == TRY_CONTEXT || context.type == LOOP_ITERATION) {
         takeSnapshot();
+
+        _infoBarMessage = "Graph snapshot taken. Graph will be reverted to this point ";
+        if (context.type == IF_CONTEXT) {
+            _infoBarMessage += "after the branch condition is evaluated.";
+        }
+        else if (context.type == TRY_CONTEXT) {
+            _infoBarMessage += "if the branch condition fails.";
+        }
+        else {
+            _infoBarMessage += "if a rule in the loop fails.";
+        }
     }
 
     // If we are entering a then context and the previous context was an if context,
@@ -241,6 +252,7 @@ void TraceRunner::enterContext(TraceStep& context) {
         TraceStepType previousContext = _contextStack.top();
         if (previousContext == IF_CONTEXT) {
             restoreSnapshot();
+            _infoBarMessage = "Graph has been reverted to the previous snapshot.";
         }
 
         // If the previous context was a try, we still need to pop the snapshot off the
@@ -255,6 +267,7 @@ void TraceRunner::enterContext(TraceStep& context) {
     // true for both if and try contexts).
     if (context.type == ELSE_BRANCH) {
         restoreSnapshot();
+        _infoBarMessage = "Graph has been reverted to the previous snapshot.";
     }
 
     _contextStack.push(context.type);
