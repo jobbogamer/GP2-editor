@@ -418,6 +418,10 @@ void RunConfiguration::runConfiguration()
 
     result.close();
 
+    if (_config->hasProgramTracing()) {
+        emit tracefileUpdated(tracefileOutput, _config, _project);
+    }
+
     if (failure)
     {
         QMessageBox::information(
@@ -431,10 +435,6 @@ void RunConfiguration::runConfiguration()
 
     //Graph* resultGraph = new Graph(output, this);
     emit obtainedResultGraph(output, _config);
-
-    if (_config->hasProgramTracing()) {
-        emit tracefileUpdated(tracefileOutput, _config, _project);
-    }
 }
 
 bool RunConfiguration::run(QString programFile, QString graphFile, QString outputFile, QString traceOutputFile)
