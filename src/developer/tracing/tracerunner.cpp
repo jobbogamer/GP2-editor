@@ -160,7 +160,7 @@ bool TraceRunner::stepForward() {
                 // Now we revert the graph back to its previous state.
                 GraphSnapshot snapshot = _snapshotStack.pop();
                 restoreSnapshot(snapshot);
-                _infoBarMessage = "Graph has been reverted to the previous snapshot.";
+                _infoBarMessage = "Graph has been reverted to its state from the start of this loop iteration.";
 
                 // Mark the current loop as failed.
                 _loopSuccessStack.pop();
@@ -419,16 +419,13 @@ void TraceRunner::enterContext(TraceStep& context, TraceDirection direction) {
             GraphSnapshot snapshot = takeSnapshot();
             _snapshotStack.push(snapshot);
 
-            _infoBarMessage = "Graph snapshot taken. Graph will be reverted to this point ";
             if (context.type == IF_CONTEXT) {
-                _infoBarMessage += "after the branch condition is evaluated.";
+                _infoBarMessage += "Graph snapshot taken. Graph will be reverted to this point after the branch condition is evaluated.";
             }
             else if (context.type == TRY_CONTEXT) {
-                _infoBarMessage += "if the branch condition fails.";
+                _infoBarMessage += "Graph snapshot taken. Graph will be reverted to this point if the branch condition fails.";
             }
             else {
-                _infoBarMessage += "if a rule in the loop fails.";
-
                 // Assume that this loop iteration will succeed.
                 _loopSuccessStack.push(true);
             }
