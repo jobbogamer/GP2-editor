@@ -123,11 +123,11 @@ private:
     QString _infoBarMessage;
     QString _error;
 
-    void enterContext(TraceStep& context);
-    void exitContext();
+    void enterContext(TraceStep& context, TraceDirection direction);
+    void exitContext(TraceDirection direction);
 
-    void takeSnapshot();
-    void restoreSnapshot();
+    GraphSnapshot takeSnapshot();
+    void restoreSnapshot(GraphSnapshot snapshot);
 
     void applyCurrentStepChanges();
     void revertCurrentStepChanges();

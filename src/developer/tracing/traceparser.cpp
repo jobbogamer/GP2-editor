@@ -77,6 +77,7 @@ bool TraceParser::parseStep(TraceStep *step) {
     step->loopBoundary = false;
     step->virtualStep = false;
     step->type = UNKNOWN;
+    step->hasSnapshot = false;
 
     // We always want to parse one step, no matter how much irrelevant XML
     // text comes before it, so we loop round until a step is traced or an

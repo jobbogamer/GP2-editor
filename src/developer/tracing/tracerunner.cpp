@@ -114,7 +114,15 @@ bool TraceRunner::stepForward() {
             }
 
             if (foundLoop && !foundBranch) {
-                restoreSnapshot();
+                // We want to take a snapshot here and store it in the current trace step,
+                // so that if we get back here backwards, we can restore the graph to its
+                // state from before we restore the snapshot below.
+                step.snapshot = takeSnapshot();
+                step.hasSnapshot = true;
+
+                // Now we revert the graph back to its previous state.
+                GraphSnapshot snapshot = _snapshotStack.pop();
+                restoreSnapshot(snapshot);
                 _infoBarMessage = "Graph has been reverted to the previous snapshot.";
 
                 // Mark the current loop as failed.
@@ -137,10 +145,10 @@ bool TraceRunner::stepForward() {
     // We don't want to treat rule matches as contexts.
     else if (step.type != RULE_MATCH) {
         if (step.endOfContext) {
-            exitContext();
+            exitContext(FORWARDS);
         }
         else {
-            enterContext(step);
+            enterContext(step, FORWARDS);
         }
     }
 
@@ -218,10 +226,18 @@ bool TraceRunner::stepBackward() {
     }
     else if (step.type != RULE_MATCH && step.type != RULE_MATCH_FAILED) {
         if (step.endOfContext) {
-            enterContext(step);
+            enterContext(step, BACKWARDS);
         }
         else {
-            exitContext();
+            exitContext(BACKWARDS);
+        }
+
+        // If the step has a snapshot associated with it, restore that snapshot.
+        // The step will only have a snapshot if backtracking occurred here when
+        // searching forwards.
+        if (step.hasSnapshot) {
+            restoreSnapshot(step.snapshot);
+            _infoBarMessage = "Backtracking previously occurred here. Reverted the graph back to its state before backtracking.";
         }
     }
 
@@ -267,66 +283,86 @@ bool TraceRunner::goToStart() {
 }
 
 
-void TraceRunner::enterContext(TraceStep& context) {
-    // If we are entering an if, try, or loop iteration context, we want to store
-    // a snapshot of the current graph, so that we can restore it if necessary.
-    // We will need to restore it at the end of the condition context (for an if),
-    // at the start of the else context (for a try), or if something in the loop
-    // body fails (for a loop).
-    if (context.type == IF_CONTEXT || context.type == TRY_CONTEXT || context.type == LOOP_ITERATION) {
-        takeSnapshot();
+void TraceRunner::enterContext(TraceStep& context, TraceDirection direction) {
+    // We only want to bother with snapshots if we are going forwards.
+    if (direction == FORWARDS) {
+        // If we are entering an if, try, or loop iteration context, we want to store
+        // a snapshot of the current graph, so that we can restore it if necessary.
+        // We will need to restore it at the end of the condition context (for an if),
+        // at the start of the else context (for a try), or if something in the loop
+        // body fails (for a loop).
+        if (context.type == IF_CONTEXT || context.type == TRY_CONTEXT || context.type == LOOP_ITERATION) {
+            GraphSnapshot snapshot = takeSnapshot();
+            _snapshotStack.push(snapshot);
 
-        _infoBarMessage = "Graph snapshot taken. Graph will be reverted to this point ";
-        if (context.type == IF_CONTEXT) {
-            _infoBarMessage += "after the branch condition is evaluated.";
-        }
-        else if (context.type == TRY_CONTEXT) {
-            _infoBarMessage += "if the branch condition fails.";
-        }
-        else {
-            _infoBarMessage += "if a rule in the loop fails.";
+            _infoBarMessage = "Graph snapshot taken. Graph will be reverted to this point ";
+            if (context.type == IF_CONTEXT) {
+                _infoBarMessage += "after the branch condition is evaluated.";
+            }
+            else if (context.type == TRY_CONTEXT) {
+                _infoBarMessage += "if the branch condition fails.";
+            }
+            else {
+                _infoBarMessage += "if a rule in the loop fails.";
 
-            // Assume that this loop iteration will succeed.
-            _loopSuccessStack.push(true);
+                // Assume that this loop iteration will succeed.
+                _loopSuccessStack.push(true);
+            }
         }
-    }
 
-    // If we are entering a then context and the previous context was an if context,
-    // we need to restore the snapshot.
-    if (context.type == THEN_BRANCH) {
-        TraceStepType previousContext = _contextStack.top();
-        if (previousContext == IF_CONTEXT) {
-            restoreSnapshot();
+        // If we are entering a then context and the previous context was an if context,
+        // we need to restore the snapshot.
+        if (context.type == THEN_BRANCH) {
+            TraceStepType previousContext = _contextStack.top();
+            if (previousContext == IF_CONTEXT) {
+                // We want to store a snapshot of the graph's current state here, so that
+                // if we reach this point backwards, we can put the graph back to how it
+                // was before we restore the snapshot below.
+                context.snapshot = takeSnapshot();
+                context.hasSnapshot = true;
+
+                // Now restore the graph back to its previous state.
+                GraphSnapshot snapshot = _snapshotStack.pop();
+                restoreSnapshot(snapshot);
+                _infoBarMessage = "Graph has been reverted to the previous snapshot.";
+            }
+
+            // If the previous context was a try, we still need to pop the snapshot off the
+            // stack, but we don't want to apply it, because the then branch of a try does
+            // not revert changes.
+            if (previousContext == TRY_CONTEXT) {
+                _snapshotStack.pop();
+            }
+        }
+
+        // If we are entering an else context, we need to restore the snapshot. (This is
+        // true for both if and try contexts).
+        if (context.type == ELSE_BRANCH) {
+            // We want to store a snapshot of the graph's current state here, so that
+            // if we reach this point backwards, we can put the graph back to how it
+            // was before we restore the snapshot below.
+            context.snapshot = takeSnapshot();
+            context.hasSnapshot = true;
+
+            // Now restore the graph back to its previous state.
+            GraphSnapshot snapshot = _snapshotStack.pop();
+            restoreSnapshot(snapshot);
             _infoBarMessage = "Graph has been reverted to the previous snapshot.";
         }
-
-        // If the previous context was a try, we still need to pop the snapshot off the
-        // stack, but we don't want to apply it, because the then branch of a try does
-        // not revert changes.
-        if (previousContext == TRY_CONTEXT) {
-            _snapshotStack.pop();
-        }
-    }
-
-    // If we are entering an else context, we need to restore the snapshot. (This is
-    // true for both if and try contexts).
-    if (context.type == ELSE_BRANCH) {
-        restoreSnapshot();
-        _infoBarMessage = "Graph has been reverted to the previous snapshot.";
     }
 
     _contextStack.push(context.type);
 }
 
 
-void TraceRunner::exitContext() {
+void TraceRunner::exitContext(TraceDirection direction) {
     TraceStepType contextType = _contextStack.pop();
 
-    // If we are exiting a loop iteration, we need to check whether to pop a snapshot
-    // off the stack. We need to do this in the case no rules failed during the entire
-    // loop iteration. If the loop failed, we will have already restored a snapshot,
-    // so there's nothing to do.
-    if (contextType == LOOP_ITERATION) {
+    // If we are exiting a loop iteration forwards, we need to check whether to pop a
+    // snapshot off the stack. We need to do this in the case no rules failed during
+    // the entire loop iteration. If the loop failed, we will have already restored a
+    // snapshot, so there's nothing to do.
+    if (contextType == LOOP_ITERATION && direction == FORWARDS) {
         bool loopSuccess = _loopSuccessStack.pop();
         if (loopSuccess) {
             _snapshotStack.pop();
@@ -335,7 +371,7 @@ void TraceRunner::exitContext() {
 }
 
 
-void TraceRunner::takeSnapshot() {
+GraphSnapshot TraceRunner::takeSnapshot() {
     GraphSnapshot snapshot;
     std::vector<Node*> nodes = _graph->nodes();
     std::vector<Edge*> edges = _graph->edges();
@@ -366,14 +402,12 @@ void TraceRunner::takeSnapshot() {
         snapshot.edges.push_back(copy);
     }
 
-    _snapshotStack.push(snapshot);
+    return snapshot;
 }
 
 
-void TraceRunner::restoreSnapshot() {
-    GraphSnapshot snapshot = _snapshotStack.pop();
-
-    // Remove all nodes and edges from the current graph.
+void TraceRunner::restoreSnapshot(GraphSnapshot snapshot) {
+   // Remove all nodes and edges from the current graph.
     std::vector<Node*> oldNodes = _graph->nodes();
     std::vector<Edge*> oldEdges = _graph->edges();
 

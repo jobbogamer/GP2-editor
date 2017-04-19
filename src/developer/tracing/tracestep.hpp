@@ -8,6 +8,7 @@
 #include "edge.hpp"
 #include "parsertypes.hpp"
 #include "token.hpp"
+#include "graphsnapshot.hpp"
 
 namespace Developer {
 
@@ -71,6 +72,8 @@ struct TraceStep {
     bool loopBoundary;
     bool virtualStep;
     QVector<GraphChange> graphChanges;
+    GraphSnapshot snapshot;
+    bool hasSnapshot;
 };
 
 }
