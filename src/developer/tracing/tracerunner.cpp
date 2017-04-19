@@ -97,6 +97,7 @@ bool TraceRunner::stepForward() {
     // that means we need to revert to the previous graph snapshot.
     if (step.type == RULE && step.endOfContext) {
         TraceStep& previousStep = _traceSteps[_currentStep - 1];
+
         if (previousStep.type == RULE_MATCH_FAILED) {
             // The only time we *don't* want to restore the snapshot in a loop is
             // if we are in a branch condition inside a loop, because failure in
@@ -105,15 +106,44 @@ bool TraceRunner::stepForward() {
             // branch condition context, we restore the snapshot. Otherwise, we just
             // pop the snapshot without applying it.
             bool foundBranch = false;
+            bool foundRuleset = false;
             bool foundLoop = false;
             QStack<TraceStepType> stackCopy = _contextStack;
             while (!stackCopy.empty() && !foundLoop) {
                 TraceStepType contextType = stackCopy.pop();
                 foundBranch = (contextType == BRANCH_CONDITION) || foundBranch;
+                foundRuleset = (contextType == RULE_SET) || foundRuleset;
                 foundLoop = (contextType == LOOP_ITERATION);
             }
 
-            if (foundLoop && !foundBranch) {
+            // There is an edge case: if this a failed rule inside a ruleset, we only
+            // need to check for a snapshot if this is the *last* rule in a ruleset
+            // which has failed. This means that the next TraceStep after this end of
+            // rule step is the end of a ruleset. If that is not the case, we do not
+            // want to do anything here.
+            bool endOfRuleset = false;
+            if (foundRuleset) {
+                // We may need to parse a new step to determine what the next step is.
+                if (_currentStep == _traceSteps.size() - 1 && !_traceParser.isParseComplete()) {
+                    TraceStep parsedStep;
+                    bool validStep = _traceParser.parseStep(&parsedStep);
+                    if (validStep) {
+                        _traceSteps.push_back(parsedStep);
+                    }
+                    else {
+                        return false;
+                    }
+                }
+
+                if (_currentStep < _traceSteps.size() - 1) {
+                    TraceStep& nextStep = _traceSteps[_currentStep + 1];
+                    if (nextStep.type == RULE_SET && nextStep.endOfContext) {
+                        endOfRuleset = true;
+                    }
+                }
+            }
+
+            if (foundLoop && !foundBranch && !(foundRuleset && !endOfRuleset)) {
                 // We want to take a snapshot here and store it in the current trace step,
                 // so that if we get back here backwards, we can restore the graph to its
                 // state from before we restore the snapshot below.
