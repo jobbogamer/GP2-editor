@@ -79,6 +79,12 @@ bool TraceRunner::isMatchApplicationAvailable() {
     return (step.type == RULE_APPLICATION);
 }
 
+
+/**
+ * Move forward in the trace by one step, updating the state of the graph
+ * if the step made any changes to it.
+ * Returns true if stepping is successful, or false if an error occurs.
+ */
 bool TraceRunner::stepForward() {
     // Sanity check...
     if (!isForwardStepAvailable()) {
@@ -234,6 +240,12 @@ bool TraceRunner::stepForward() {
     return true;
 }
 
+
+/**
+ * Move backward in the trace by one step, reverting the state of the graph
+ * if the step had previously made any changes to it.
+ * Returns true if stepping is successful, or false if an error occurs.
+ */
 bool TraceRunner::stepBackward() {
     // Sanity check...
     if (!isBackwardStepAvailable()) {
@@ -280,6 +292,37 @@ bool TraceRunner::stepBackward() {
     // We are not parsing anything because any time we go backwards, we have
     // already parsed the steps before the current one. Therefore we will never
     // encounter an error.
+    return true;
+}
+
+
+bool TraceRunner::step(TraceDirection direction) {
+    bool finished = false;
+    do {
+        bool success = true;
+        if (direction == FORWARDS) {
+            success = stepForward();
+            if (!success) { return false; }
+        }
+        if (direction == BACKWARDS) {
+            success = stepBackward();
+            if (!success) { return false; }
+        }
+
+        if (_currentStep == 0 || _currentStep >= _traceSteps.size()) {
+            // We reached the end of the trace.
+            finished = true;
+            break;
+        }
+
+        // Have we met the conditions for ending the step?
+        TraceStep& step = _traceSteps[_currentStep];
+        if (step.type == RULE_MATCH || step.type == RULE_MATCH_FAILED) { finished = true; }
+        if (step.type == PROCEDURE) { finished = true; }
+        if (_infoBarMessage.length() > 0) { finished = true; }
+    }
+    while (!finished);
+
     return true;
 }
 

@@ -103,14 +103,14 @@ void Tracing::goToEnd() {
 
 void Tracing::stepBack() {
     // Assuming the button is only enabled if a backwards step is available.
-    bool success = _traceRunner->stepBackward();
+    bool success = _traceRunner->step(BACKWARDS);
     if (!success) { showError(); }
     updateUI();
 }
 
 void Tracing::stepForward() {
     // Assuming the button is only enabled if a forward step is available.
-    bool success = _traceRunner->stepForward();
+    bool success = _traceRunner->step(FORWARDS);
     if (!success) { showError(); }
     updateUI();
 }

@@ -60,18 +60,11 @@ public:
     bool isMatchApplicationAvailable();
 
     /**
-     * Move forward in the trace by one step, updating the state of the graph
-     * if the step made any changes to it.
-     * Returns true if stepping is successful, or false if an error occurs.
+     * Move through the trace in the given direction until either the start of
+     * a rule is reached, a procedure call is reached, or a message is shown in
+     * the info bar.
      */
-    bool stepForward();
-
-    /**
-     * Move backward in the trace by one step, reverting the state of the graph
-     * if the step had previously made any changes to it.
-     * Returns true if stepping is successful, or false if an error occurs.
-     */
-    bool stepBackward();
+    bool step(TraceDirection direction);
 
     /**
      * Jump ahead to the end of the trace, updating the graph to be the output
@@ -128,6 +121,9 @@ private:
 
     GraphSnapshot takeSnapshot();
     void restoreSnapshot(GraphSnapshot snapshot);
+
+    bool stepForward();
+    bool stepBackward();
 
     void applyCurrentStepChanges();
     void revertCurrentStepChanges();
