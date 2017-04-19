@@ -153,7 +153,7 @@ void Tracing::findMatch() {
 }
 
 void Tracing::applyMatch() {
-    qDebug() << "applyMatch()";
+    _traceRunner->applyMatch();
     updateUI();
 }
 

@@ -322,6 +322,18 @@ boost::optional<Morphism> TraceRunner::findMatch() {
 }
 
 
+void TraceRunner::applyMatch() {
+    // Sanity check...
+    if (!isMatchApplicationAvailable()) {
+        return;
+    }
+
+    // The current step must be a RULE_APPLICATION, so all we have to do is
+    // step forward and the application will happen magically.
+    stepForward();
+}
+
+
 bool TraceRunner::goToEnd() {
     // We will simply call stepForward() in a loop until we reach the end of
     // the trace (or an error occurs). We have to do this because there is no
