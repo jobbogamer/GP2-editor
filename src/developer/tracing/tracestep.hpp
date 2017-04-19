@@ -16,13 +16,13 @@ typedef boost::variant<edge_t, node_t> graph_item_t;
 
 /**
  * A Morphism is a pair of vectors representing a rule match morphism. The
- * first item is a vector of integer node IDs, and the second is a vector of
- * integer edge IDs.
+ * first item is a vector of node IDs, and the second is a vector of edge IDs.
  */
-typedef QPair< QVector<int>, QVector<int> > Morphism;
+typedef QPair< QVector<QString>, QVector<QString> > Morphism;
 
 enum GraphChangeType {
-    MORPHISM,
+    MORPHISM_NODE,
+    MORPHISM_EDGE,
     ADD_EDGE,
     ADD_NODE,
     DELETE_EDGE,

@@ -1,6 +1,7 @@
 #include "tracerunner.hpp"
 
 #include <QDebug>
+#include <QPair>
 #include "translate/translate.hpp"
 
 namespace Developer {
@@ -280,6 +281,44 @@ bool TraceRunner::stepBackward() {
     // already parsed the steps before the current one. Therefore we will never
     // encounter an error.
     return true;
+}
+
+
+boost::optional<Morphism> TraceRunner::findMatch() {
+    // Sanity check...
+    if (!isFindMatchAvailable()) {
+        return boost::none;
+    }
+
+    // Get a reference to the current step, then step forwards.
+    TraceStep& step = _traceSteps[_currentStep];
+    stepForward();
+
+    // If the match failed, return none, signifying the failure. (An empty morphism
+    // can still be valid, so returning an empty one is not strong enough).
+    if (step.type == RULE_MATCH_FAILED) {
+        return boost::none;
+    }
+
+    // If the match succeeded, get all the node and edge IDs from the graphChanges
+    // list inside the trace step.
+    QVector<QString> nodeIDs;
+    QVector<QString> edgeIDs;
+    QVector<GraphChange> matchItems = step.graphChanges;
+    for (int i = 0; i < matchItems.size(); i++) {
+        GraphChange item = matchItems[i];
+        if (item.type == MORPHISM_NODE) {
+            node_t node = boost::get<node_t>(item.existingItem);
+            nodeIDs.push_back(QSTRING(node.id));
+        }
+        else if (item.type == MORPHISM_EDGE) {
+            edge_t edge = boost::get<edge_t>(item.existingItem);
+            edgeIDs.push_back(QSTRING(edge.id));
+        }
+    }
+
+    Morphism morphism(nodeIDs, edgeIDs);
+    return morphism;
 }
 
 

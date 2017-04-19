@@ -201,8 +201,8 @@ bool TraceParser::parseStartElement(TraceStep *step) {
                 // Create a GraphChange struct and push it into the TraceStep's
                 // change vector.
                 GraphChange change;
+                change.type = MORPHISM_NODE;
                 change.existingItem = node;
-                change.type = MORPHISM;
                 step->graphChanges.push_back(change);
             }
             else if (_xml->name() == "edge") {
@@ -216,7 +216,7 @@ bool TraceParser::parseStartElement(TraceStep *step) {
                 // Create a GraphChange struct and push it into the TraceStep's
                 // change vector.
                 GraphChange change;
-                change.type = MORPHISM;
+                change.type = MORPHISM_EDGE;
                 change.existingItem = edge;
                 step->graphChanges.push_back(change);
             }

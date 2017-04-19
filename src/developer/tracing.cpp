@@ -116,8 +116,40 @@ void Tracing::stepForward() {
 }
 
 void Tracing::findMatch() {
-    qDebug() << "findMatch()";
+    boost::optional<Morphism> morphism = _traceRunner->findMatch();
     updateUI();
+
+    GraphScene* graphScene = _ui->graphView->graphScene();
+    std::vector<Node*> nodes = _traceRunner->graph()->nodes();
+    std::vector<Edge*> edges = _traceRunner->graph()->edges();
+
+    for (size_t i = 0; i < nodes.size(); i++) {
+        QString nodeID = nodes[i]->id();
+        NodeItem* nodeItem = graphScene->node(nodeID);
+
+        nodeItem->setSelected(false);
+
+        if (morphism) {
+            if (morphism->first.contains(nodeID)) {
+                nodeItem->setSelected(true);
+            }
+        }
+    }
+
+    for (size_t i = 0; i < edges.size(); i++) {
+        QString edgeID = edges[i]->id();
+        EdgeItem* edgeItem = graphScene->edge(edgeID);
+
+        edgeItem->setSelected(false);
+
+        if (morphism) {
+            if (morphism->second.contains(edgeID)) {
+                edgeItem->setSelected(true);
+            }
+        }
+    }
+
+    graphScene->update();
 }
 
 void Tracing::applyMatch() {
